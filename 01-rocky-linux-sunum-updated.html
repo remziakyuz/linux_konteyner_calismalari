@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rocky Linux 9 - Sistem Yönetimi (systemd-252 Güncel)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            overflow: hidden;
+        }
+
+        .presentation {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .slide {
+            background: white;
+            width: 90%;
+            max-width: 1200px;
+            height: 85vh;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 60px 80px;
+            display: none;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .slide.active {
+            display: flex;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .slide h1 {
+            color: #10b981;
+            font-size: 48px;
+            margin-bottom: 30px;
+            border-bottom: 4px solid #10b981;
+            padding-bottom: 15px;
+        }
+
+        .slide h2 {
+            color: #2563eb;
+            font-size: 36px;
+            margin-bottom: 25px;
+            margin-top: 20px;
+        }
+
+        .slide h3 {
+            color: #059669;
+            font-size: 28px;
+            margin-bottom: 15px;
+            margin-top: 15px;
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .content ul {
+            margin-left: 30px;
+            margin-bottom: 20px;
+        }
+
+        .content li {
+            margin-bottom: 15px;
+            font-size: 20px;
+            line-height: 1.6;
+            color: #334155;
+        }
+
+        .content li strong {
+            color: #1e40af;
+        }
+
+        .content p {
+            font-size: 20px;
+            line-height: 1.7;
+            color: #475569;
+            margin-bottom: 15px;
+        }
+
+        .boot-diagram {
+            background: #f1f5f9;
+            padding: 30px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 5px solid #10b981;
+        }
+
+        .boot-step {
+            background: white;
+            padding: 15px 20px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border-left: 4px solid #3b82f6;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .boot-step h4 {
+            color: #1e40af;
+            margin-bottom: 8px;
+            font-size: 20px;
+        }
+
+        .boot-step p {
+            font-size: 16px;
+            margin: 0;
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #10b981;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+
+        .highlight-box {
+            background: #dbeafe;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid #2563eb;
+            margin: 15px 0;
+        }
+
+        .warning-box {
+            background: #fef3c7;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid #f59e0b;
+            margin: 15px 0;
+        }
+
+        .new-feature {
+            background: #dcfce7;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid #10b981;
+            margin: 15px 0;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .card {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .card h4 {
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .btn {
+            background: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            color: #1e40af;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: #3b82f6;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .slide-number {
+            position: absolute;
+            bottom: 20px;
+            right: 30px;
+            color: #94a3b8;
+            font-size: 16px;
+        }
+
+        .logo {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #10b981;
+        }
+
+        .title-slide {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .title-slide h1 {
+            font-size: 72px;
+            border: none;
+        }
+
+        .title-slide p {
+            font-size: 28px;
+            color: #64748b;
+            margin-top: 20px;
+        }
+
+        .arrow {
+            font-size: 28px;
+            color: #10b981;
+            margin: 0 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation">
+        <!-- Slide 1: Kapak -->
+        <div class="slide active title-slide">
+            <h1>🐧 Rocky Linux 9</h1>
+            <p>Sistem Yönetimi ve Temel Yapılandırma</p>
+            <p style="font-size: 20px; margin-top: 40px; color: #94a3b8;">Kurumsal Linux Dağıtımı</p>
+            <p style="font-size: 16px; margin-top: 20px; color: #10b981;">✨ systemd-252 Güncel Sürümü</p>
+            <div class="slide-number">1 / 25</div>
+        </div>
+
+        <!-- Slide 2: İçindekiler -->
+        <div class="slide">
+            <h1>📋 İçindekiler</h1>
+            <div class="content">
+                <ul>
+                    <li><strong>Rocky Linux Tanıtımı</strong> - Tarihçe ve özellikleri</li>
+                    <li><strong>Boot Süreci</strong> - Donanımdan işletim sistemine</li>
+                    <li><strong>systemd-252</strong> - Modern init sistemi ve yeni özellikler <span class="badge">GÜNCEL</span></li>
+                    <li><strong>Güvenlik Önlemleri</strong> - Temel koruma stratejileri</li>
+                    <li><strong>Stabilite Önlemleri</strong> - Sistem kararlılığı</li>
+                    <li><strong>Dosya Sistemi</strong> - Yapı ve öneriler</li>
+                    <li><strong>Servis Yönetimi</strong> - Daemon'lar ve kontrol</li>
+                </ul>
+            </div>
+            <div class="slide-number">2 / 25</div>
+        </div>
+
+        <!-- Slide 3: Rocky Linux Nedir? -->
+        <div class="slide">
+            <h1>🏔️ Rocky Linux Nedir?</h1>
+            <div class="content">
+                <div class="highlight-box">
+                    <h3>Kurumsal Düzeyde Açık Kaynak İşletim Sistemi</h3>
+                    <p>Red Hat Enterprise Linux (RHEL) ile %100 uyumlu, ücretsiz ve topluluk destekli</p>
+                </div>
+                <h3>Temel Özellikler:</h3>
+                <ul>
+                    <li><strong>Kararlılık:</strong> 10 yıl boyunca güvenlik güncellemeleri (2032'ye kadar)</li>
+                    <li><strong>Uyumluluk:</strong> RHEL binary uyumlu</li>
+                    <li><strong>Ücretsiz:</strong> Tam özellikli, lisans maliyeti yok</li>
+                    <li><strong>Topluluk Desteği:</strong> Aktif ve büyük bir geliştirici topluluğu</li>
+                    <li><strong>Kurumsal:</strong> Üretim ortamları için tasarlanmış</li>
+                </ul>
+            </div>
+            <div class="slide-number">3 / 25</div>
+        </div>
+
+        <!-- Slide 4: Rocky Linux Tarihçesi -->
+        <div class="slide">
+            <h1>📜 Rocky Linux Tarihçesi</h1>
+            <div class="content">
+                <div class="boot-diagram">
+                    <div class="boot-step">
+                        <h4>2020 - CentOS Değişimi</h4>
+                        <p>Red Hat, CentOS Linux'u CentOS Stream'e dönüştürdüğünü duyurdu</p>
+                    </div>
+                    <div class="boot-step">
+                        <h4>2021 - Rocky Linux Doğuşu</h4>
+                        <p>CentOS kurucusu Gregory Kurtzer tarafından Rocky McGaugh anısına başlatıldı</p>
+                    </div>
+                    <div class="boot-step">
+                        <h4>2021 Haziran - İlk Sürüm</h4>
+                        <p>Rocky Linux 8.4 kararlı sürümü yayınlandı</p>
+                    </div>
+                    <div class="boot-step">
+                        <h4>2022 - Rocky Linux 9.0</h4>
+                        <p>RHEL 9 tabanlı yeni nesil sürüm (14 Temmuz 2022 yayınlandı)</p>
+                    </div>
+                </div>
+                <div class="highlight-box">
+                    <strong>Misyon:</strong> CentOS Linux'un ruhunu yaşatmak ve kurumsal Linux ekosistemini güçlendirmek
+                </div>
+            </div>
+            <div class="slide-number">4 / 25</div>
+        </div>
+
+        <!-- Slide 5: Rocky Linux 9 Yenilikleri -->
+        <div class="slide">
+            <h1>✨ Rocky Linux 9 Yenilikleri</h1>
+            <div class="content">
+                <div class="grid-2">
+                    <div class="card">
+                        <h4>🔧 Sistem Bileşenleri</h4>
+                        <ul style="font-size: 16px;">
+                            <li>Kernel 5.14</li>
+                            <li>Python 3.9</li>
+                            <li>GCC 11</li>
+                            <li>PHP 8.0</li>
+                            <li>systemd 252 <span class="badge">YENİ</span></li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>🔒 Güvenlik</h4>
+                        <ul style="font-size: 16px;">
+                            <li>SELinux iyileştirmeleri</li>
+                            <li>OpenSSL 3.0</li>
+                            <li>Gelişmiş firewalld</li>
+                            <li>TPM 2.0 desteği</li>
+                        </ul>
+                    </div>
+                </div>
+                <h3>Öne Çıkan Özellikler:</h3>
+                <ul>
+                    <li><strong>Konteyner Desteği:</strong> Podman 4.x+ ve Buildah geliştirilmiş</li>
+                    <li><strong>Dosya Sistemi:</strong> XFS varsayılan, Btrfs desteği kaldırıldı</li>
+                    <li><strong>Ağ İyileştirmeleri:</strong> NetworkManager geliştirilmiş</li>
+                    <li><strong>Performans:</strong> Daha hızlı boot süresi</li>
+                </ul>
+            </div>
+            <div class="slide-number">5 / 25</div>
+        </div>
+
+        <!-- Slide 6: Boot Süreci - Genel Bakış -->
+        <div class="slide">
+            <h1>🚀 Boot Süreci - Genel Bakış</h1>
+            <div class="content">
+                <div class="highlight-box">
+                    <h3>Bilgisayar Açılışından Login Ekranına Kadar</h3>
+                    <p>Donanım testinden kullanıcı girişine kadar geçen tüm aşamalar</p>
+                </div>
+                <div class="boot-diagram">
+                    <div style="text-align: center; font-size: 24px; margin: 20px 0;">
+                        <strong>Güç</strong> 
+                        <span class="arrow">→</span> 
+                        <strong>BIOS/UEFI</strong> 
+                        <span class="arrow">→</span> 
+                        <strong>GRUB</strong> 
+                        <span class="arrow">→</span> 
+                        <strong>Kernel</strong> 
+                        <span class="arrow">→</span> 
+                        <strong>systemd</strong> 
+                        <span class="arrow">→</span> 
+                        <strong>Login</strong>
+                    </div>
+                </div>
+                <p style="text-align: center; color: #64748b; font-size: 18px;">
+                    Ortalama boot süresi: 10-30 saniye (donanıma göre değişir)
+                </p>
+            </div>
+            <div class="slide-number">6 / 25</div>
+        </div>
+
+        <!-- Slide 7: Boot Süreci - Detaylı Şema -->
+        <div class="slide">
+            <h1>🔄 Boot Süreci - BIOS vs UEFI Karşılaştırması</h1>
+            <div class="content" style="overflow-y: auto;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div style="background: #eff6ff; padding: 15px; border-radius: 8px; border: 3px solid #3b82f6;">
+                        <h3 style="text-align: center; color: #1e40af; margin-bottom: 15px;">🔵 BIOS Boot (Legacy)</h3>
+                        <div class="boot-step" style="margin: 8px 0; padding: 10px; font-size: 14px;">
+                            <strong>1. Hardware</strong> → Donanım başlatılır
+                        </div>
+                        <div class="boot-step" style="margin: 8px 0; padding: 10px; font-size: 14px;">
+                            <strong>2. POST</strong> → Donanım kontrolü
+                        </div>
+                        <div class="boot-step" style="margin: 8px 0; padding: 10px; font-size: 14px;">
+                            <strong>3. Hardware Init</strong> → Donanım hazır
+                        </div>
+                        <div class="boot-step" style="margin: 8px 0; padding: 10px; font-size: 14px;">
+                            <strong>4. BIOS Firmware</strong> → Boot cihazı aranır
+                        </div>
+                        <div class="boot-step" style="margin: 8px 0; padding: 10px; font-size: 14px;">
+                            <strong>5. MBR</strong> → İlk 512 byte okunur<br>
+                            <small style="color: #64748b;">Master Boot Record</small>
+                        </div>
+                        <div class="boot-step" style="margin: 8px 0; padding: 10px; font-size: 14px;">
+                            <strong>6. Bootloader</strong> → /boot/grub2/ yüklenir
+                        </div>
+                        <div class="boot-step" style="margin: 8px 0; padding: 10px; font-size: 14px;">
+                            <strong>7. GRUB2 Menu</strong> → Kernel seçimi
+                        </div>
+                        <div class="boot-step" style="margin: 8px 0; padding: 10px; font-size: 14px;">
+                            <strong>8. Kernel + Initramfs</strong> → Yüklenir
+                        </div>
+                        <div class="boot-step" style="margin: 8px 0; padding: 10px; font-size: 14px;">
+                            <strong>9. systemd</strong> → Init sistemi (PID 1)
+                        </div>
+                        <div class="boot-step" style="margin: 8px 0; padding: 10px; font-size: 14px;">
+                            <strong>10. Login Prompt</strong> → Sistem hazır ✓
+                        </div>
+                    </div>
+                    
+                    <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 3px solid #10b981;">
+                        <h3 style="text-align: center; color: #059669; margin-bottom: 15px;">🟢 UEFI Boot (Modern)</h3>
+                        <div class="boot-step" style="margin: 8px 0; padding: 10px; font-size: 14px;">
+                            <strong>1. Hardware</strong> → Donanım başlatılır
+                        </div>
+                        <div class="boot-step" style="margin: 8px 0; padding: 10px; font-size: 14px;">
+                            <strong>2. POST</strong> → Donanım kontrolü
+                        </div>
+                        <div class="boot-step" style="margin: 8px 0; padding: 10px; font-size: 14px;">
+                            <strong>3. Hardware Init</strong> → Donanım hazır
+                        </div>
+                        <div class="boot-step" style="margin: 8px 0; padding: 10px; font-size: 14px;">
+                            <strong>4. UEFI Firmware</strong> → EFI partition'ı bulur
+                        </div>
+                        <div class="boot-step" style="margin: 8px 0; padding: 10px; font-size: 14px;">
+                            <strong>5. GPT</strong> → GUID Partition Table okunur<br>
+                            <small style="color: #64748b;">Modern partisyon şeması</small>
+                        </div>
+                        <div class="boot-step" style="margin: 8px 0; padding: 10px; font-size: 14px;">
+                            <strong>6. EFI Partition</strong> → /boot/efi mount edilir<br>
+                            <small style="color: #64748b;">FAT32 dosya sistemi</small>
+                        </div>
+                        <div class="boot-step" style="margin: 8px 0; padding: 10px; font-size: 14px;">
+                            <strong>7. GRUB2 Menu</strong> → /boot/efi/EFI/redhat/grubx64.efi
+                        </div>
+                        <div class="boot-step" style="margin: 8px 0; padding: 10px; font-size: 14px;">
+                            <strong>8. Kernel + Initramfs</strong> → Yüklenir
+                        </div>
+                        <div class="boot-step" style="margin: 8px 0; padding: 10px; font-size: 14px;">
+                            <strong>9. systemd</strong> → Init'ten /sysroot'a geçiş
+                        </div>
+                        <div class="boot-step" style="margin: 8px 0; padding: 10px; font-size: 14px;">
+                            <strong>10. Login Prompt</strong> → Sistem hazır ✓
+                        </div>
+                    </div>
+                </div>
+                <div class="highlight-box" style="margin-top: 10px;">
+                    <strong>Temel Farklar:</strong> UEFI Secure Boot desteği sunar, daha hızlıdır ve 2TB üzeri diskleri destekler (GPT)
+                </div>
+            </div>
+            <div class="slide-number">7 / 25</div>
+        </div>
+
+        <!-- Slide 8: Boot Süreci - Aşama 1 -->
+        <div class="slide">
+            <h1>🔌 Boot Aşama 1: POST ve BIOS/UEFI</h1>
+            <div class="content">
+                <div class="boot-step">
+                    <h4>1. Güç Tuşuna Basılır (Power On)</h4>
+                    <p>Anakarta elektrik gider, işlemci başlatılır</p>
+                </div>
+                <div class="boot-step">
+                    <h4>2. POST (Power-On Self-Test)</h4>
+                    <p>✓ CPU kontrolü<br>
+                    ✓ RAM kontrolü<br>
+                    ✓ Klavye/Fare kontrolü<br>
+                    ✓ Video kartı kontrolü<br>
+                    ✓ Disk kontrolü</p>
+                </div>
+                <div class="boot-step">
+                    <h4>3. BIOS/UEFI Yüklenir</h4>
+                    <p>• BIOS: Basic Input/Output System (Eski sistem)<br>
+                    • UEFI: Unified Extensible Firmware Interface (Modern sistem)<br>
+                    • Boot sırasını kontrol eder (USB, HDD, SSD, CD/DVD)</p>
+                </div>
+                <div class="warning-box">
+                    <strong>Önemli:</strong> POST başarısız olursa bip sesleri duyulur, sistem açılmaz
+                </div>
+            </div>
+            <div class="slide-number">8 / 25</div>
+        </div>
+
+        <!-- Slide 9: Boot Süreci - Aşama 2 -->
+        <div class="slide">
+            <h1>💾 Boot Aşama 2: Bootloader (GRUB2)</h1>
+            <div class="content">
+                <div class="boot-step">
+                    <h4>4. MBR/GPT Okunur</h4>
+                    <p>• MBR (Master Boot Record): İlk 512 byte, eski disklerde<br>
+                    • GPT (GUID Partition Table): Modern, UEFI ile gelir</p>
+                </div>
+                <div class="boot-step">
+                    <h4>5. GRUB2 Bootloader Yüklenir</h4>
+                    <p>Grand Unified Bootloader - İşletim sistemi seçim menüsü</p>
+                </div>
+                <div class="code-block" style="font-size: 15px;">
+<span style="color: #64748b;"># GRUB Menüsü Görünümü</span>
+Rocky Linux (5.14.0-162.6.1.el9_1.x86_64)
+Rocky Linux (0-rescue)
+Windows Boot Manager (UEFI) - Varsa
+
+<span style="color: #64748b;"># Kernel parametreleri buradan düzenlenebilir (e tuşu)</span>
+                </div>
+                <div class="highlight-box">
+                    <strong>GRUB'ın Görevi:</strong> Kernel'i ve initramfs'i RAM'e yüklemek
+                </div>
+            </div>
+            <div class="slide-number">9 / 25</div>
+        </div>
+
+        <!-- Slide 10: Boot Süreci - Aşama 3 -->
+        <div class="slide">
+            <h1>🐧 Boot Aşama 3: Kernel ve initramfs</h1>
+            <div class="content">
+                <div class="boot-step">
+                    <h4>6. Linux Kernel Yüklenir</h4>
+                    <p>• /boot/vmlinuz-* dosyası RAM'e yüklenir<br>
+                    • Sıkıştırılmış kernel açılır ve çalışmaya başlar<br>
+                    • Donanım algılama başlar</p>
+                </div>
+                <div class="boot-step">
+                    <h4>7. initramfs (Initial RAM File System)</h4>
+                    <p>• Geçici kök dosya sistemi<br>
+                    • Gereken driver'ları yükler (SATA, RAID, LVM vb.)<br>
+                    • Asıl kök dosya sistemini bulur ve mount eder</p>
+                </div>
+                <div class="code-block" style="font-size: 15px;">
+<span style="color: #64748b;"># Kernel mesajlarını görmek için</span>
+dmesg | less
+journalctl -k
+
+<span style="color: #64748b;"># Boot sırasında yüklenen modüller</span>
+lsmod
+
+<span style="color: #64748b;"># Kernel versiyonu</span>
+uname -r
+                </div>
+            </div>
+            <div class="slide-number">10 / 25</div>
+        </div>
+
+        <!-- Slide 11: Boot Süreci - Aşama 4 -->
+        <div class="slide">
+            <h1>⚙️ Boot Aşama 4: systemd ve Servisler</h1>
+            <div class="content">
+                <div class="boot-step">
+                    <h4>8. systemd Başlatılır (PID 1)</h4>
+                    <p>• İlk çalışan kullanıcı alanı process'i<br>
+                    • Tüm diğer servislerin ebeveyni<br>
+                    • Target'lara göre sistem durumunu başlatır</p>
+                </div>
+                <div class="boot-step">
+                    <h4>9. Varsayılan Target Yüklenir</h4>
+                    <p>• graphical.target (GUI) veya multi-user.target (CLI)<br>
+                    • Servisleri paralel olarak başlatır<br>
+                    • Dependency yönetimi yapar</p>
+                </div>
+                <div class="boot-step">
+                    <h4>10. Login Ekranı Hazır</h4>
+                    <p>• getty servisleri terminalleri hazırlar<br>
+                    • gdm/lightdm gibi display manager'lar GUI için başlar<br>
+                    • Sistem kullanıma hazır!</p>
+                </div>
+            </div>
+            <div class="slide-number">11 / 25</div>
+        </div>
+
+        <!-- Slide 12: systemd-252 Nedir? -->
+        <div class="slide">
+            <h1>⚡ systemd-252 - Modern Init Sistemi</h1>
+            <div class="content">
+                <div class="highlight-box">
+                    <h3>systemd: Linux için System and Service Manager</h3>
+                    <p>Eski SysVinit'in yerine geçen, paralel başlatma ve dependency yönetimi yapan modern init sistemi</p>
+                </div>
+                <h3>Temel Özellikler:</h3>
+                <ul>
+                    <li><strong>Paralel Başlatma:</strong> Servisleri aynı anda başlatır, hızlı boot</li>
+                    <li><strong>Dependency Yönetimi:</strong> Servisler arası bağımlılıkları yönetir</li>
+                    <li><strong>On-Demand Başlatma:</strong> Socket activation ile ihtiyaç olunca servis başlatır</li>
+                    <li><strong>Cgroup v2 Entegrasyonu:</strong> Kaynak yönetimi ve izolasyon</li>
+                    <li><strong>Log Yönetimi:</strong> journald ile merkezi ve yapılandırılmış loglama</li>
+                </ul>
+                <div class="code-block" style="font-size: 15px;">
+<span style="color: #64748b;"># systemd versiyonu kontrol</span>
+systemctl --version
+systemd 252 (252-14.el9_2.4)
+
+<span style="color: #64748b;"># Tüm servislerin durumu</span>
+systemctl list-units --type=service
+                </div>
+                <div class="warning-box" style="margin-top: 15px; font-size: 16px;">
+                    <strong>Not:</strong> systemd'nin eski "snapshot" özelliği 2015'te kaldırılmıştır. Sistem yedekleme için LVM snapshot kullanın.
+                </div>
+            </div>
+            <div class="slide-number">12 / 25</div>
+        </div>
+
+        <!-- Slide 13: systemd-252 Yeni Özellikler -->
+        <div class="slide">
+            <h1>🆕 systemd-252 Yeni Özellikler</h1>
+            <div class="content">
+                <div class="new-feature">
+                    <h3>🔐 Güvenlik ve TPM 2.0 İyileştirmeleri</h3>
+                    <ul style="font-size: 18px;">
+                        <li><strong>systemd-measure:</strong> TPM2 PCR hesaplamaları için yeni araç</li>
+                        <li><strong>Disk Şifreleme:</strong> TPM2 tabanlı otomatik kilit açma</li>
+                        <li><strong>UEFI Güvenlik:</strong> Unified Kernel Image (UKI) imza desteği</li>
+                    </ul>
+                </div>
+                <div class="new-feature">
+                    <h3>📊 İzleme ve Loglama İyileştirmeleri</h3>
+                    <ul style="font-size: 18px;">
+                        <li><strong>journalctl -o short-delta:</strong> Mesajlar arası zaman farkını gösterir</li>
+                        <li><strong>_RUNTIME_SCOPE_:</strong> Mesajın initrd mi sistem fazında mı loglandığını gösterir</li>
+                        <li><strong>--quiet flag:</strong> journalctl tutarlılık kontrolünde sessiz mod</li>
+                    </ul>
+                </div>
+                <div class="new-feature">
+                    <h3>🛠️ Yönetim Araçları Güncellemeleri</h3>
+                    <ul style="font-size: 18px;">
+                        <li><strong>systemctl --state ve --type:</strong> show ve status için yeni filtreler</li>
+                        <li><strong>systemctl list-automounts:</strong> Automount noktalarını listeler</li>
+                        <li><strong>coredumpctl --root/--image:</strong> Farklı dizin veya imajlardan log arama</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="slide-number">13 / 25</div>
+        </div>
+
+        <!-- Slide 14: systemd-252 Ek Özellikler -->
+        <div class="slide">
+            <h1>✨ systemd-252 Ek Özellikler</h1>
+            <div class="content">
+                <div class="grid-2">
+                    <div class="card">
+                        <h4>🔋 Güç Yönetimi</h4>
+                        <ul style="font-size: 16px;">
+                            <li><strong>Suspend-then-hibernate:</strong> Pil boşalma oranını tahmin eder</li>
+                            <li><strong>Akıllı Hibernation:</strong> Pil %5'in altındaysa direkt hibernation</li>
+                            <li><strong>UEFI Boot Counter:</strong> Ek entropi kaynağı olarak kullanılır</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>🔒 Kripto ve Ağ</h4>
+                        <ul style="font-size: 16px;">
+                            <li><strong>OpenSSL:</strong> systemd-resolved için varsayılan backend</li>
+                            <li><strong>GnuTLS:</strong> Hala destekleniyor</li>
+                            <li><strong>EFI Mixed Mode:</strong> 64-bit kernel, 32-bit UEFI desteği</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="new-feature" style="margin-top: 20px;">
+                    <h3>⚠️ Support-Ended Taint Flag</h3>
+                    <p style="font-size: 18px;">systemd artık işletim sistemi desteğinin bittiğini algılayıp "support-ended" taint flag'i atar. Bu sayede destek dışı sistemler kolayca tespit edilebilir.</p>
+                </div>
+                <div class="code-block" style="font-size: 15px; margin-top: 15px;">
+<span style="color: #64748b;"># Sistem taint durumunu kontrol et</span>
+systemd-analyze dump | grep Taint
+
+<span style="color: #64748b;"># systemd-sysctl yeni --strict seçeneği</span>
+systemd-sysctl --strict
+                </div>
+            </div>
+            <div class="slide-number">14 / 25</div>
+        </div>
+
+        <!-- Slide 15: systemd Temel Komutlar -->
+        <div class="slide">
+            <h1>🛠️ systemd Temel Komutlar</h1>
+            <div class="content">
+                <div class="grid-2">
+                    <div class="card">
+                        <h4>📦 Servis Yönetimi</h4>
+                        <div class="code-block" style="font-size: 14px; padding: 15px;">
+systemctl start httpd
+<span style="color: #64748b;"># Servisi başlat</span>
+
+systemctl stop httpd
+<span style="color: #64748b;"># Servisi durdur</span>
+
+systemctl restart httpd
+<span style="color: #64748b;"># Servisi yeniden başlat</span>
+
+systemctl reload httpd
+<span style="color: #64748b;"># Config yenile</span>
+
+systemctl status httpd
+<span style="color: #64748b;"># Servis durumu</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h4>🔄 Boot Yönetimi</h4>
+                        <div class="code-block" style="font-size: 14px; padding: 15px;">
+systemctl enable httpd
+<span style="color: #64748b;"># Boot'ta otomatik başlat</span>
+
+systemctl disable httpd
+<span style="color: #64748b;"># Boot'ta başlatma</span>
+
+systemctl is-enabled httpd
+<span style="color: #64748b;"># Enable durumunu kontrol</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" style="margin-top: 20px;">
+                    <h4>💻 Sistem Yönetimi</h4>
+                    <div class="code-block" style="font-size: 14px; padding: 15px;">
+systemctl reboot              <span style="color: #64748b;"># Sistemi yeniden başlat</span>
+systemctl poweroff            <span style="color: #64748b;"># Sistemi kapat</span>
+systemctl list-units          <span style="color: #64748b;"># Çalışan unit'leri listele</span>
+systemctl list-unit-files     <span style="color: #64748b;"># Tüm unit dosyalarını listele</span>
+<span style="color: #10b981;">systemctl list-automounts</span>     <span style="color: #64748b;"># Automount noktaları (YENİ 252)</span>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-number">15 / 25</div>
+        </div>
+
+        <!-- Slide 16: systemd-252 Gelişmiş Komutlar -->
+        <div class="slide">
+            <h1>🔍 systemd-252 Gelişmiş Komutlar</h1>
+            <div class="content">
+                <div class="new-feature">
+                    <h3>Yeni Filtreleme Seçenekleri</h3>
+                    <div class="code-block" style="font-size: 14px;">
+<span style="color: #64748b;"># Belirli state'teki servisleri göster (YENİ 252)</span>
+systemctl status --state=failed
+systemctl show --state=active --type=service
+
+<span style="color: #64748b;"># Belirli tip unit'leri göster (YENİ 252)</span>
+systemctl show --type=socket
+systemctl status --type=timer
+                    </div>
+                </div>
+                <div class="new-feature" style="margin-top: 15px;">
+                    <h3>TPM2 ve Güvenlik Komutları</h3>
+                    <div class="code-block" style="font-size: 14px;">
+<span style="color: #64748b;"># TPM2 PCR değerlerini hesapla (YENİ 252)</span>
+systemd-measure calculate
+
+<span style="color: #64748b;"># Sistem taint durumunu analiz et</span>
+systemd-analyze dump | grep -i taint
+
+<span style="color: #64748b;"># Boot performans analizi</span>
+systemd-analyze blame
+systemd-analyze critical-chain
+                    </div>
+                </div>
+                <div class="new-feature" style="margin-top: 15px;">
+                    <h3>Coredump Gelişmiş Yönetim</h3>
+                    <div class="code-block" style="font-size: 14px;">
+<span style="color: #64748b;"># Farklı root dizininden coredump ara (YENİ 252)</span>
+coredumpctl --root=/mnt/backup list
+
+<span style="color: #64748b;"># Disk imajından coredump ara (YENİ 252)</span>
+coredumpctl --image=/dev/sdb1 list
+                    </div>
+                </div>
+            </div>
+            <div class="slide-number">16 / 25</div>
+        </div>
+
+        <!-- Slide 17: systemd Units ve Targets -->
+        <div class="slide">
+            <h1>🎯 systemd Units ve Targets</h1>
+            <div class="content">
+                <h3>Unit Tipleri:</h3>
+                <div class="grid-2">
+                    <div class="card">
+                        <h4>Service (.service)</h4>
+                        <p style="font-size: 16px;">Daemon'lar ve servisler</p>
+                    </div>
+                    <div class="card">
+                        <h4>Socket (.socket)</h4>
+                        <p style="font-size: 16px;">IPC veya ağ soketleri</p>
+                    </div>
+                    <div class="card">
+                        <h4>Mount (.mount)</h4>
+                        <p style="font-size: 16px;">Dosya sistemi mount noktaları</p>
+                    </div>
+                    <div class="card">
+                        <h4>Timer (.timer)</h4>
+                        <p style="font-size: 16px;">Zamanlanmış görevler (cron benzeri)</p>
+                    </div>
+                </div>
+                <h3>Önemli Targets:</h3>
+                <ul>
+                    <li><strong>multi-user.target:</strong> Çok kullanıcılı CLI modu (runlevel 3)</li>
+                    <li><strong>graphical.target:</strong> GUI ile çok kullanıcılı mod (runlevel 5)</li>
+                    <li><strong>rescue.target:</strong> Kurtarma modu (runlevel 1)</li>
+                    <li><strong>emergency.target:</strong> Acil durum modu</li>
+                </ul>
+            </div>
+            <div class="slide-number">17 / 25</div>
+        </div>
+
+        <!-- Slide 18: Temel Güvenlik - Firewall -->
+        <div class="slide">
+            <h1>🔒 Temel Güvenlik: Firewall (firewalld)</h1>
+            <div class="content">
+                <div class="highlight-box">
+                    <h3>firewalld: Dinamik Güvenlik Duvarı Yöneticisi</h3>
+                    <p>Zone tabanlı, dinamik kural yönetimi sunar</p>
+                </div>
+                <div class="code-block" style="font-size: 15px;">
+<span style="color: #64748b;"># Firewall durumunu kontrol et</span>
+systemctl status firewalld
+firewall-cmd --state
+
+<span style="color: #64748b;"># Aktif zone'ları listele</span>
+firewall-cmd --get-active-zones
+
+<span style="color: #64748b;"># Port açma</span>
+firewall-cmd --permanent --add-port=80/tcp
+firewall-cmd --permanent --add-port=443/tcp
+firewall-cmd --reload
+
+<span style="color: #64748b;"># Servis açma</span>
+firewall-cmd --permanent --add-service=http
+firewall-cmd --permanent --add-service=https
+firewall-cmd --reload
+
+<span style="color: #64748b;"># Kuralları listeleme</span>
+firewall-cmd --list-all
+                </div>
+            </div>
+            <div class="slide-number">18 / 25</div>
+        </div>
+
+        <!-- Slide 19: Temel Güvenlik - SELinux -->
+        <div class="slide">
+            <h1>🛡️ Temel Güvenlik: SELinux</h1>
+            <div class="content">
+                <div class="highlight-box">
+                    <h3>Security-Enhanced Linux</h3>
+                    <p>Zorunlu erişim kontrolü (MAC) sağlayan güvenlik modülü</p>
+                </div>
+                <h3>SELinux Modları:</h3>
+                <ul>
+                    <li><strong>Enforcing:</strong> Politikaları zorlar, ihlalleri engeller</li>
+                    <li><strong>Permissive:</strong> İhlalleri loglar ama engel olmaz (test için)</li>
+                    <li><strong>Disabled:</strong> SELinux tamamen kapalı (önerilmez)</li>
+                </ul>
+                <div class="code-block" style="font-size: 15px;">
+<span style="color: #64748b;"># SELinux durumunu kontrol et</span>
+getenforce
+sestatus
+
+<span style="color: #64748b;"># Geçici olarak mod değiştir</span>
+setenforce 0    <span style="color: #64748b;"># Permissive moda geç</span>
+setenforce 1    <span style="color: #64748b;"># Enforcing moda geç</span>
+
+<span style="color: #64748b;"># SELinux loglarını görüntüle</span>
+ausearch -m avc -ts recent
+sealert -a /var/log/audit/audit.log
+                </div>
+            </div>
+            <div class="slide-number">19 / 25</div>
+        </div>
+
+        <!-- Slide 20: Temel Güvenlik - SSH ve Kullanıcı -->
+        <div class="slide">
+            <h1>🔐 Temel Güvenlik: SSH ve Kullanıcı Yönetimi</h1>
+            <div class="content">
+                <h3>SSH Güvenlik Önlemleri:</h3>
+                <div class="code-block" style="font-size: 14px;">
+<span style="color: #64748b;"># /etc/ssh/sshd_config düzenlemeleri</span>
+
+PermitRootLogin no
+<span style="color: #64748b;"># Root girişini kapat</span>
+
+PasswordAuthentication no
+<span style="color: #64748b;"># Şifre girişini kapat</span>
+
+PubkeyAuthentication yes
+<span style="color: #64748b;"># Sadece SSH key ile giriş</span>
+
+Port 2222
+<span style="color: #64748b;"># Varsayılan portu değiştir</span>
+
+MaxAuthTries 3
+<span style="color: #64748b;"># Maksimum deneme sayısı</span>
+
+ClientAliveInterval 300
+<span style="color: #64748b;"># Timeout süresi (5 dakika)</span>
+                </div>
+                <h3 style="margin-top: 15px;">Kullanıcı Güvenliği:</h3>
+                <ul>
+                    <li><strong>sudo Kullanımı:</strong> Root yerine sudo ile yetki ver</li>
+                    <li><strong>Güçlü Şifreler:</strong> pwquality ile şifre politikası</li>
+                    <li><strong>Fail2ban:</strong> Brute force koruması (EPEL'den kurulur)</li>
+                    <li><strong>Düzenli Güncellemeler:</strong> dnf update ile sistem güncel</li>
+                </ul>
+            </div>
+            <div class="slide-number">20 / 25</div>
+        </div>
+
+        <!-- Slide 21: Stabilite - Yedekleme ve Monitoring -->
+        <div class="slide">
+            <h1>📊 Stabilite: Yedekleme ve İzleme</h1>
+            <div class="content">
+                <h3>Düzenli Yedekleme Stratejisi:</h3>
+                <div class="grid-2">
+                    <div class="card">
+                        <h4>rsync ile Yedek</h4>
+                        <div class="code-block" style="font-size: 14px; padding: 12px;">
+rsync -avz /data/ /backup/data/
+
+<span style="color: #64748b;"># -a: archive mode
+# -v: verbose
+# -z: compression</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h4>tar ile Arşivleme</h4>
+                        <div class="code-block" style="font-size: 14px; padding: 12px;">
+tar -czf backup.tar.gz /etc /var/www
+
+<span style="color: #64748b;"># -c: create
+# -z: gzip
+# -f: file</span>
+                        </div>
+                    </div>
+                </div>
+                <h3>Sistem İzleme Komutları:</h3>
+                <div class="code-block" style="font-size: 14px; margin-top: 10px;">
+<span style="color: #64748b;"># Gerçek zamanlı sistem kaynakları</span>
+top
+htop
+
+<span style="color: #64748b;"># Disk kullanımı</span>
+df -h
+
+<span style="color: #64748b;"># Sistem çalışma süresi ve load average</span>
+uptime
+
+<span style="color: #64748b;"># Ağ bağlantıları</span>
+ss -tulpn
+                </div>
+            </div>
+            <div class="slide-number">21 / 25</div>
+        </div>
+
+        <!-- Slide 22: Stabilite - Log Yönetimi -->
+        <div class="slide">
+            <h1>📝 Stabilite: Log Yönetimi (journald)</h1>
+            <div class="content">
+                <div class="highlight-box">
+                    <h3>journald: systemd Log Servisi</h3>
+                    <p>Tüm sistem ve servis loglarını merkezi olarak toplar</p>
+                </div>
+                <div class="code-block" style="font-size: 14px;">
+<span style="color: #64748b;"># Tüm logları göster</span>
+journalctl
+
+<span style="color: #64748b;"># Son 100 satırı göster</span>
+journalctl -n 100
+
+<span style="color: #64748b;"># Gerçek zamanlı log takibi</span>
+journalctl -f
+
+<span style="color: #64748b;"># Belirli bir servisin logları</span>
+journalctl -u httpd
+
+<span style="color: #64748b;"># Boot logları</span>
+journalctl -b
+
+<span style="color: #64748b;"># Zaman aralığı ile</span>
+journalctl --since "2024-01-01" --until "2024-01-31"
+
+<span style="color: #64748b;"># Öncelik seviyesine göre (error ve üzeri)</span>
+journalctl -p err
+
+<span style="color: #10b981;"># Mesajlar arası zaman farkı (YENİ 252)</span>
+journalctl -o short-delta
+
+<span style="color: #10b981;"># Sessiz mod ile tutarlılık kontrolü (YENİ 252)</span>
+journalctl --verify --quiet
+                </div>
+            </div>
+            <div class="slide-number">22 / 25</div>
+        </div>
+
+        <!-- Slide 23: Dosya Sistemi -->
+        <div class="slide">
+            <h1>💿 Linux Dosya Sistemi ve Yapısı</h1>
+            <div class="content">
+                <h3>Rocky Linux 9 Önerilen Dosya Sistemi:</h3>
+                <div class="highlight-box">
+                    <strong>XFS:</strong> Varsayılan dosya sistemi<br>
+                    ✓ Yüksek performans<br>
+                    ✓ Büyük dosyalar için optimize<br>
+                    ✓ Online defragmentation<br>
+                    ✓ Snapshot desteği (LVM ile)
+                </div>
+                <h3>Alternatif Dosya Sistemleri:</h3>
+                <ul>
+                    <li><strong>ext4:</strong> Geleneksel, kararlı, küçük dosyalar için iyi</li>
+                    <li><strong>Btrfs:</strong> Rocky 9'da kaldırıldı (copy-on-write özelliği vardı)</li>
+                </ul>
+                <div class="code-block" style="font-size: 15px;">
+<span style="color: #64748b;"># Dosya sistemini kontrol et</span>
+df -hT
+
+<span style="color: #64748b;"># Disk kullanımı</span>
+du -sh /var/log
+
+<span style="color: #64748b;"># Mount edilmiş sistemler</span>
+mount | grep -v tmpfs
+
+<span style="color: #64748b;"># İnode kullanımı</span>
+df -i
+                </div>
+            </div>
+            <div class="slide-number">23 / 25</div>
+        </div>
+
+        <!-- Slide 24: LVM Snapshot -->
+        <div class="slide">
+            <h1>📸 LVM Snapshot - Sistem Yedekleme</h1>
+            <div class="content">
+                <div class="highlight-box">
+                    <h3>LVM Snapshot ile Güvenli Yedekleme</h3>
+                    <p>Rocky Linux 9'da snapshot almak için LVM (Logical Volume Manager) kullanılır. systemd'nin snapshot özelliği 2015'te kaldırılmıştır.</p>
+                </div>
+                <h3>Snapshot Oluşturma:</h3>
+                <div class="code-block" style="font-size: 14px;">
+<span style="color: #64748b;"># Mevcut logical volume'leri göster</span>
+lvdisplay
+df -hT
+
+<span style="color: #64748b;"># Volume group'ta boş alan kontrol</span>
+vgs
+
+<span style="color: #64748b;"># 5GB snapshot oluştur</span>
+lvcreate -L 5G -s -n root_snapshot /dev/rocky/root
+
+<span style="color: #64748b;"># Snapshot durumunu kontrol</span>
+lvs -o +lv_size,data_percent
+                </div>
+                <h3>Snapshot Mount Etme (XFS için):</h3>
+                <div class="code-block" style="font-size: 14px;">
+<span style="color: #64748b;"># XFS için -o nouuid gereklidir</span>
+mkdir /mnt/snapshot
+mount -t xfs -o nouuid,ro /dev/rocky/root_snapshot /mnt/snapshot
+
+<span style="color: #64748b;"># Yedekleme yap</span>
+tar -czf /backup/root-$(date +%Y%m%d).tar.gz -C /mnt/snapshot .
+
+<span style="color: #64748b;"># İş bitince - ÖNCELİKLE unmount</span>
+umount /mnt/snapshot
+<span style="color: #64748b;"># Sonra snapshot'ı sil</span>
+lvremove -f /dev/rocky/root_snapshot
+                </div>
+                <div class="warning-box">
+                    <strong>Önemli:</strong> Snapshot doluluk oranını izleyin! %100 dolarsa snapshot bozulur. Gerekirse <code>lvextend</code> ile genişletin.
+                </div>
+            </div>
+            <div class="slide-number">24 / 25</div>
+        </div>
+
+        <!-- Slide 25: Servis Yönetimi -->
+        <div class="slide">
+            <h1>🔧 Servis Yönetimi ve En İyi Uygulamalar</h1>
+            <div class="content">
+                <h3>Önemli Servisler:</h3>
+                <div class="grid-2">
+                    <div class="card">
+                        <h4>Sistem Servisleri</h4>
+                        <ul style="font-size: 16px;">
+                            <li>sshd - Uzaktan erişim</li>
+                            <li>chronyd - Zaman senkronizasyonu</li>
+                            <li>rsyslog - Log yönetimi</li>
+                            <li>NetworkManager - Ağ yönetimi</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Güvenlik Servisleri</h4>
+                        <ul style="font-size: 16px;">
+                            <li>firewalld - Güvenlik duvarı</li>
+                            <li>auditd - Güvenlik denetimi</li>
+                            <li>fail2ban* - Saldırı koruması</li>
+                        </ul>
+                        <p style="font-size: 14px; color: #64748b; margin-top: 10px;">* EPEL reposundan kurulur</p>
+                    </div>
+                </div>
+                <h3>Best Practices:</h3>
+                <ul>
+                    <li>Kullanılmayan servisleri <strong>disable</strong> edin</li>
+                    <li>Servis loglarını düzenli kontrol edin</li>
+                    <li>Kritik servisler için <strong>monitoring</strong> kurun</li>
+                    <li>Restart policy belirleyin (on-failure)</li>
+                    <li><strong>systemd-252</strong> özelliklerinden yararlanın</li>
+                </ul>
+                <div class="new-feature" style="margin-top: 15px;">
+                    <strong>systemd-252 ile:</strong> Gelişmiş filtreleme, TPM2 güvenliği ve daha iyi log yönetimi sisteminizi daha güvenli ve yönetilebilir hale getirir.
+                </div>
+            </div>
+            <div class="slide-number">25 / 25</div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn" id="prevBtn">◀ Önceki</button>
+        <button class="btn" id="nextBtn">Sonraki ▶</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        function showSlide(n) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (n + totalSlides) % totalSlides;
+            slides[currentSlide].classList.add('active');
+        }
+
+        function nextSlide() {
+            showSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+            showSlide(currentSlide - 1);
+        }
+
+        document.getElementById('nextBtn').addEventListener('click', nextSlide);
+        document.getElementById('prevBtn').addEventListener('click', prevSlide);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+
+        slides.forEach((slide, index) => {
+            slide.addEventListener('click', (e) => {
+                if (e.clientX > window.innerWidth / 2) {
+                    nextSlide();
+                } else {
+                    prevSlide();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

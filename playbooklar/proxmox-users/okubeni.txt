@@ -1,0 +1,1 @@
+vm-users.csv dosyasındaki kullanıcıları oluşturarak, kendilerine ait vmlere erisim yetkisi verir.

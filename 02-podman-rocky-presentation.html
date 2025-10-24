@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rocky Linux 9 + Podman Mimarisi</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/night.min.css">
+    <style>
+        .reveal h1, .reveal h2, .reveal h3 { text-transform: none; }
+        .reveal { font-size: 32px; }
+        .reveal pre { width: 100%; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .reveal code { background: #2d2d2d; padding: 2px 8px; border-radius: 4px; }
+        .reveal .slides section { text-align: left; }
+        .reveal ul, .reveal ol { display: block; margin-left: 40px; }
+        .highlight { color: #42affa; font-weight: bold; }
+        .success { color: #4CAF50; }
+        .warning { color: #ff9800; }
+        .architecture-box { 
+            border: 2px solid #42affa; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 8px; 
+            background: rgba(66, 175, 250, 0.1);
+        }
+        .command-box {
+            background: #1a1a1a;
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 0.8em;
+        }
+        .center-content { text-align: center !important; }
+        .small-text { font-size: 0.8em; }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .comparison-table th, .comparison-table td {
+            border: 1px solid #42affa;
+            padding: 10px;
+            text-align: center;
+        }
+        .comparison-table th {
+            background: rgba(66, 175, 250, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            
+            <!-- Slayt 1: Başlık -->
+            <section class="center-content">
+                <h1>🐳 Rocky Linux 9</h1>
+                <h2>Podman Container Mimarisi</h2>
+                <p style="margin-top: 50px;">Daemonless Container Yönetimi ve Guestbook Lab Uygulaması</p>
+                <p class="small-text" style="margin-top: 80px;">2025</p>
+            </section>
+
+            <!-- Slayt 2: İçindekiler -->
+            <section>
+                <h2>📋 İçindekiler</h2>
+                <ol style="font-size: 0.9em; line-height: 1.8;">
+                    <li>Container Teknolojilerine Giriş</li>
+                    <li>Podman'ın Ortaya Çıkışı ve Tarihçesi</li>
+                    <li>Docker vs Podman Karşılaştırması</li>
+                    <li>Podman Mimarisi ve Çalışma Mantığı</li>
+                    <li>Podman Katmanları ve Bileşenleri</li>
+                    <li>Rocky Linux 9 Entegrasyonu</li>
+                    <li>Guestbook Lab Uygulaması</li>
+                    <li>Sistemd Entegrasyonu ve Otomasyonu</li>
+                </ol>
+            </section>
+
+            <!-- Slayt 3: Container Teknolojisine Giriş -->
+            <section>
+                <h2>🏗️ Container Teknolojisi Nedir?</h2>
+                <div class="architecture-box">
+                    <p><strong>Tanım:</strong> Uygulamaları ve bağımlılıklarını izole edilmiş ortamlarda çalıştırma teknolojisi</p>
+                </div>
+                <ul style="margin-top: 30px;">
+                    <li><span class="highlight">Hafif:</span> VM'lere göre çok daha az kaynak kullanımı</li>
+                    <li><span class="highlight">Taşınabilir:</span> "Build once, run anywhere" prensibi</li>
+                    <li><span class="highlight">İzole:</span> Her container kendi namespace'inde çalışır</li>
+                    <li><span class="highlight">Hızlı:</span> Saniyeler içinde başlatılabilir</li>
+                </ul>
+            </section>
+
+            <!-- Slayt 4: Neden Container? -->
+            <section>
+                <h2>❓ Neden Container Kullanmalıyız?</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px;">
+                    <div class="architecture-box">
+                        <h3 style="color: #4CAF50;">✅ Avantajlar</h3>
+                        <ul style="font-size: 0.8em;">
+                            <li>Tutarlı geliştirme ortamı</li>
+                            <li>Hızlı deployment</li>
+                            <li>Mikroservis mimarisi desteği</li>
+                            <li>CI/CD entegrasyonu</li>
+                        </ul>
+                    </div>
+                    <div class="architecture-box">
+                        <h3 style="color: #42affa;">🎯 Kullanım Alanları</h3>
+                        <ul style="font-size: 0.8em;">
+                            <li>Web uygulamaları</li>
+                            <li>Veritabanı servisleri</li>
+                            <li>API sunucuları</li>
+                            <li>DevOps araçları</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slayt 5: VM vs Container -->
+            <section>
+                <h2>⚖️ Virtual Machine vs Container</h2>
+                <table class="comparison-table small-text">
+                    <tr>
+                        <th>Özellik</th>
+                        <th>Virtual Machine</th>
+                        <th>Container</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Başlatma Süresi</strong></td>
+                        <td>Dakikalar</td>
+                        <td class="success">Saniyeler</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Kaynak Kullanımı</strong></td>
+                        <td>Yüksek (GB'lar)</td>
+                        <td class="success">Düşük (MB'lar)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>İzolasyon</strong></td>
+                        <td class="success">Tam (Hypervisor)</td>
+                        <td>Namespace/Cgroups</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Taşınabilirlik</strong></td>
+                        <td>Orta</td>
+                        <td class="success">Yüksek</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- Slayt 6: Podman'ın Doğuşu -->
+            <section>
+                <h2>🌟 Podman'ın Ortaya Çıkışı</h2>
+                <div class="architecture-box">
+                    <p><strong>2018 yılında Red Hat tarafından geliştirildi</strong></p>
+                </div>
+                <ul style="margin-top: 30px; line-height: 1.8;">
+                    <li><span class="highlight">Geliştiriciler:</span> Red Hat Container Team</li>
+                    <li><span class="highlight">İlk Sürüm:</span> Podman 0.1 (Şubat 2018)</li>
+                    <li><span class="highlight">Stabil Sürüm:</span> Podman 1.0 (Ocak 2019)</li>
+                    <li><span class="highlight">Güncel:</span> Podman 4.x+ serisi (2022+)</li>
+                    <li><span class="highlight">Lisans:</span> Apache License 2.0 (Open Source)</li>
+                </ul>
+            </section>
+
+            <!-- Slayt 7: Neden Podman? -->
+            <section>
+                <h2>🎯 Podman Neden Geliştirildi?</h2>
+                <h3 style="color: #42affa; margin-top: 40px;">Docker'daki Temel Sorunlar:</h3>
+                <ol style="margin-top: 20px; line-height: 2;">
+                    <li><span class="warning">Daemon Bağımlılığı:</span> dockerd sürekli root olarak çalışmalı</li>
+                    <li><span class="warning">Güvenlik Riski:</span> Single point of failure</li>
+                    <li><span class="warning">Root Erişimi:</span> Tüm işlemler root yetkisi gerektiriyor</li>
+                    <li><span class="warning">Systemd Entegrasyonu:</span> Native entegrasyon eksikliği</li>
+                </ol>
+            </section>
+
+            <!-- Slayt 8: Docker'ın Daemon Sorunu -->
+            <section>
+                <h2>⚠️ Docker Daemon Problemi</h2>
+                <div class="command-box">
+                    <p style="color: #ff5555;">❌ Docker Mimarisi:</p>
+                    <pre style="margin: 0;">Kullanıcı → Docker CLI → Docker Daemon (root) → Container</pre>
+                </div>
+                <ul style="margin-top: 30px; line-height: 1.8;">
+                    <li>Daemon çökerse tüm containerlar etkilenir</li>
+                    <li>Daemon her zaman root yetkisiyle çalışır</li>
+                    <li>Tek bir sürecin tüm containerları kontrol etmesi</li>
+                    <li>Güvenlik açıkları tüm sistemi etkiler</li>
+                </ul>
+            </section>
+
+            <!-- Slayt 9: Podman'ın Çözümü -->
+            <section>
+                <h2>✅ Podman'ın Daemonless Yaklaşımı</h2>
+                <div class="command-box">
+                    <p style="color: #50fa7b;">✅ Podman Mimarisi:</p>
+                    <pre style="margin: 0;">Kullanıcı → Podman CLI → Container Runtime → Container</pre>
+                </div>
+                <ul style="margin-top: 30px; line-height: 1.8;">
+                    <li class="success">✓ Daemon yok, doğrudan fork/exec modeli</li>
+                    <li class="success">✓ Her container bağımsız süreç</li>
+                    <li class="success">✓ Rootless container desteği</li>
+                    <li class="success">✓ Systemd native entegrasyonu</li>
+                </ul>
+            </section>
+
+            <!-- Slayt 10: Docker vs Podman -->
+            <section>
+                <h2>🔄 Docker vs Podman Karşılaştırması</h2>
+                <table class="comparison-table small-text">
+                    <tr>
+                        <th>Özellik</th>
+                        <th>Docker</th>
+                        <th>Podman</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Daemon</strong></td>
+                        <td class="warning">Gerekli (dockerd)</td>
+                        <td class="success">Daemon yok</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Root Erişimi</strong></td>
+                        <td class="warning">Root gerekli</td>
+                        <td class="success">Rootless mode</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Systemd</strong></td>
+                        <td>Kısıtlı destek</td>
+                        <td class="success">Native entegrasyon</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Pod Desteği</strong></td>
+                        <td>Docker Compose</td>
+                        <td class="success">Native pod support</td>
+                    </tr>
+                    <tr>
+                        <td><strong>OCI Uyumlu</strong></td>
+                        <td class="success">Evet</td>
+                        <td class="success">Evet</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- Slayt 11: Podman'ın Avantajları -->
+            <section>
+                <h2>🚀 Podman'ın Temel Avantajları</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 30px; font-size: 0.85em;">
+                    <div class="architecture-box">
+                        <h4>🔒 Güvenlik</h4>
+                        <ul>
+                            <li>Rootless containerlar</li>
+                            <li>User namespace desteği</li>
+                            <li>SELinux entegrasyonu</li>
+                        </ul>
+                    </div>
+                    <div class="architecture-box">
+                        <h4>⚡ Performans</h4>
+                        <ul>
+                            <li>Daemon overhead yok</li>
+                            <li>Doğrudan fork/exec</li>
+                            <li>Daha az kaynak kullanımı</li>
+                        </ul>
+                    </div>
+                    <div class="architecture-box">
+                        <h4>🔧 Esneklik</h4>
+                        <ul>
+                            <li>Docker komutlarıyla uyumlu</li>
+                            <li>Pod desteği (K8s benzeri)</li>
+                            <li>Systemd entegrasyonu</li>
+                        </ul>
+                    </div>
+                    <div class="architecture-box">
+                        <h4>🏢 Kurumsal</h4>
+                        <ul>
+                            <li>RHEL/CentOS/Rocky desteği</li>
+                            <li>Red Hat tarafından destekleniyor</li>
+                            <li>Open source</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slayt 12: Podman Ekosistemi -->
+            <section>
+                <h2>🌐 Podman Ekosistemi</h2>
+                <div class="architecture-box" style="margin: 20px 0;">
+                    <h4 style="text-align: center; color: #42affa;">Podman Araçları</h4>
+                </div>
+                <ul style="line-height: 2;">
+                    <li><span class="highlight">Podman:</span> Container çalıştırma ve yönetimi</li>
+                    <li><span class="highlight">Buildah:</span> Container image oluşturma</li>
+                    <li><span class="highlight">Skopeo:</span> Image transfer ve yönetimi</li>
+                    <li><span class="highlight">CRI-O:</span> Kubernetes runtime interface</li>
+                    <li><span class="highlight">Podman Desktop:</span> GUI arayüzü</li>
+                </ul>
+            </section>
+
+            <!-- Slayt 13: Podman Mimarisi -->
+            <section>
+                <h2>🏛️ Podman Mimarisi Genel Bakış</h2>
+                <div style="font-size: 0.75em; margin-top: 20px;">
+                    <div class="architecture-box" style="background: rgba(255,152,0,0.1); border-color: #ff9800;">
+                        <strong>1. Kullanıcı Katmanı</strong><br>
+                        Podman CLI, API çağrıları
+                    </div>
+                    <div style="text-align: center; font-size: 2em; color: #42affa;">↓</div>
+                    <div class="architecture-box" style="background: rgba(66,175,250,0.1);">
+                        <strong>2. Podman Core</strong><br>
+                        Libpod kütüphanesi, Pod/Container yönetimi
+                    </div>
+                    <div style="text-align: center; font-size: 2em; color: #42affa;">↓</div>
+                    <div class="architecture-box" style="background: rgba(76,175,80,0.1); border-color: #4CAF50;">
+                        <strong>3. Container Runtime</strong><br>
+                        runc/crun (OCI Runtime)
+                    </div>
+                    <div style="text-align: center; font-size: 2em; color: #42affa;">↓</div>
+                    <div class="architecture-box" style="background: rgba(156,39,176,0.1); border-color: #9c27b0;">
+                        <strong>4. Linux Kernel</strong><br>
+                        Namespaces, Cgroups, SELinux
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slayt 14: Katman 1 - Kullanıcı Arayüzü -->
+            <section>
+                <h2>📱 Katman 1: Kullanıcı Arayüzü</h2>
+                <div class="architecture-box">
+                    <h4>Podman CLI (Command Line Interface)</h4>
+                    <ul style="font-size: 0.85em;">
+                        <li>Docker ile %95+ komut uyumluluğu</li>
+                        <li><code>alias docker=podman</code> kullanılabilir</li>
+                        <li>RESTful API desteği</li>
+                    </ul>
+                </div>
+                <div class="command-box" style="margin-top: 20px;">
+                    <p>Temel Komutlar:</p>
+                    <pre>$ podman run -d nginx
+$ podman ps
+$ podman images
+$ podman pull registry.io/image:tag</pre>
+                </div>
+            </section>
+
+            <!-- Slayt 15: Katman 2 - Libpod -->
+            <section>
+                <h2>⚙️ Katman 2: Libpod Kütüphanesi</h2>
+                <div class="architecture-box">
+                    <h4>Libpod: Podman'ın Kalbi</h4>
+                    <p style="font-size: 0.85em; margin-top: 10px;">Go dilinde yazılmış kütüphane, tüm container ve pod mantığını yönetir</p>
+                </div>
+                <ul style="margin-top: 20px; line-height: 1.8; font-size: 0.9em;">
+                    <li><span class="highlight">Container Lifecycle:</span> Oluşturma, başlatma, durdurma, silme</li>
+                    <li><span class="highlight">Pod Yönetimi:</span> Kubernetes benzeri pod desteği</li>
+                    <li><span class="highlight">Image Management:</span> Pull, push, build işlemleri</li>
+                    <li><span class="highlight">Network:</span> CNI (Container Network Interface) entegrasyonu</li>
+                    <li><span class="highlight">Storage:</span> Volume ve bind mount yönetimi</li>
+                </ul>
+            </section>
+
+            <!-- Slayt 16: Katman 3 - OCI Runtime -->
+            <section>
+                <h2>🏃 Katman 3: OCI Container Runtime</h2>
+                <div class="architecture-box">
+                    <h4>runc / crun: Container Çalıştırıcıları</h4>
+                </div>
+                <table class="comparison-table small-text" style="margin-top: 20px;">
+                    <tr>
+                        <th>Runtime</th>
+                        <th>Dil</th>
+                        <th>Özellik</th>
+                    </tr>
+                    <tr>
+                        <td><strong>runc</strong></td>
+                        <td>Go</td>
+                        <td>OCI referans implementasyonu</td>
+                    </tr>
+                    <tr>
+                        <td><strong>crun</strong></td>
+                        <td>C</td>
+                        <td class="success">%50 daha hızlı, Podman default</td>
+                    </tr>
+                </table>
+                <p style="margin-top: 20px; font-size: 0.85em;">
+                    <span class="highlight">Görev:</span> OCI spesifikasyonuna göre container'ı kernel'de çalıştırmak
+                </p>
+            </section>
+
+            <!-- Slayt 17: Katman 4 - Linux Kernel -->
+            <section>
+                <h2>🐧 Katman 4: Linux Kernel Özellikleri</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; font-size: 0.85em;">
+                    <div class="architecture-box">
+                        <h4>Namespaces</h4>
+                        <ul>
+                            <li><strong>PID:</strong> Process izolasyonu</li>
+                            <li><strong>NET:</strong> Network izolasyonu</li>
+                            <li><strong>MNT:</strong> Filesystem izolasyonu</li>
+                            <li><strong>UTS:</strong> Hostname izolasyonu</li>
+                            <li><strong>IPC:</strong> Inter-process comm.</li>
+                            <li><strong>USER:</strong> User ID izolasyonu</li>
+                        </ul>
+                    </div>
+                    <div class="architecture-box">
+                        <h4>Cgroups</h4>
+                        <ul>
+                            <li><strong>CPU:</strong> CPU limitleri</li>
+                            <li><strong>Memory:</strong> RAM limitleri</li>
+                            <li><strong>Block I/O:</strong> Disk I/O</li>
+                            <li><strong>Network:</strong> Bant genişliği</li>
+                        </ul>
+                        <h4 style="margin-top: 15px;">SELinux</h4>
+                        <ul>
+                            <li>Mandatory Access Control</li>
+                            <li>Label-based security</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slayt 18: Container Yaşam Döngüsü -->
+            <section>
+                <h2>🔄 Container Yaşam Döngüsü</h2>
+                <div style="font-size: 0.7em; margin-top: 20px;">
+                    <div style="display: flex; justify-content: space-around; align-items: center;">
+                        <div class="architecture-box" style="width: 15%;">CREATED</div>
+                        <div style="font-size: 2em;">→</div>
+                        <div class="architecture-box" style="width: 15%; background: rgba(76,175,80,0.2);">RUNNING</div>
+                        <div style="font-size: 2em;">→</div>
+                        <div class="architecture-box" style="width: 15%;">PAUSED</div>
+                    </div>
+                    <div style="text-align: center; margin: 20px 0; font-size: 2em;">↓</div>
+                    <div style="display: flex; justify-content: space-around; align-items: center;">
+                        <div class="architecture-box" style="width: 15%;">STOPPED</div>
+                        <div style="font-size: 2em;">→</div>
+                        <div class="architecture-box" style="width: 15%; background: rgba(244,67,54,0.2);">EXITED</div>
+                        <div style="font-size: 2em;">→</div>
+                        <div class="architecture-box" style="width: 15%;">REMOVED</div>
+                    </div>
+                </div>
+                <div class="command-box" style="margin-top: 30px;">
+                    <pre>$ podman create  → CREATED
+$ podman start   → RUNNING
+$ podman pause   → PAUSED
+$ podman stop    → STOPPED
+$ podman rm      → REMOVED</pre>
+                </div>
+            </section>
+
+            <!-- Slayt 19: Image Katmanları -->
+            <section>
+                <h2>📦 Container Image Katman Yapısı</h2>
+                <div style="font-size: 0.75em; margin-top: 20px;">
+                    <div class="architecture-box" style="background: rgba(244,67,54,0.1); border-color: #f44336;">
+                        <strong>Container Layer (R/W)</strong> - Çalışma zamanı değişiklikleri
+                    </div>
+                    <div style="text-align: center; margin: 5px 0;">└── Copy-on-Write (COW)</div>
+                    <div class="architecture-box">
+                        <strong>Layer 3 (R/O):</strong> apt-get install nginx
+                    </div>
+                    <div style="text-align: center; margin: 5px 0;">↓</div>
+                    <div class="architecture-box">
+                        <strong>Layer 2 (R/O):</strong> apt-get update
+                    </div>
+                    <div style="text-align: center; margin: 5px 0;">↓</div>
+                    <div class="architecture-box">
+                        <strong>Layer 1 (R/O):</strong> FROM rocky:9
+                    </div>
+                </div>
+                <p style="margin-top: 20px; font-size: 0.85em;">
+                    <span class="highlight">Overlay Filesystem:</span> Tüm katmanlar birleştirilerek container'a sunulur
+                </p>
+            </section>
+
+            <!-- Slayt 20: Network Modları -->
+            <section>
+                <h2>🌐 Podman Network Modları</h2>
+                <table class="comparison-table small-text">
+                    <tr>
+                        <th>Mod</th>
+                        <th>Açıklama</th>
+                        <th>Kullanım</th>
+                    </tr>
+                    <tr>
+                        <td><strong>bridge</strong></td>
+                        <td>Sanal köprü ağı (default)</td>
+                        <td>Containerlar arası iletişim</td>
+                    </tr>
+                    <tr>
+                        <td><strong>host</strong></td>
+                        <td>Host network namespace kullanır</td>
+                        <td>En yüksek performans</td>
+                    </tr>
+                    <tr>
+                        <td><strong>none</strong></td>
+                        <td>Network izolasyonu yok</td>
+                        <td>Güvenlik testleri</td>
+                    </tr>
+                    <tr>
+                        <td><strong>container</strong></td>
+                        <td>Başka container'ın networkünü kullan</td>
+                        <td>Pod yapıları</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- Slayt 21: Volume Yönetimi -->
+            <section>
+                <h2>💾 Storage ve Volume Yönetimi</h2>
+                <div style="font-size: 0.85em; margin-top: 20px;">
+                    <div class="architecture-box">
+                        <h4>1. Bind Mount</h4>
+                        <pre style="margin: 5px 0;">-v /host/path:/container/path</pre>
+                        <p>Host dizinini doğrudan bağlar</p>
+                    </div>
+                    <div class="architecture-box">
+                        <h4>2. Named Volume</h4>
+                        <pre style="margin: 5px 0;">-v volume-name:/container/path</pre>
+                        <p>Podman tarafından yönetilen volume</p>
+                    </div>
+                    <div class="architecture-box">
+                        <h4>3. tmpfs Mount</h4>
+                        <pre style="margin: 5px 0;">--tmpfs /container/path</pre>
+                        <p>RAM'de geçici depolama</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slayt 22: SELinux Etiketleri -->
+            <section>
+                <h2>🔒 SELinux ve Podman</h2>
+                <div class="architecture-box">
+                    <h4>SELinux Volume Etiketleri</h4>
+                </div>
+                <table class="comparison-table small-text" style="margin-top: 20px;">
+                    <tr>
+                        <th>Etiket</th>
+                        <th>Açıklama</th>
+                    </tr>
+                    <tr>
+                        <td><strong>:z</strong></td>
+                        <td>Birden fazla container paylaşabilir (shared)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>:Z</strong></td>
+                        <td>Sadece bu container kullanabilir (private)</td>
+                    </tr>
+                </table>
+                <div class="command-box" style="margin-top: 20px;">
+                    <pre>$ podman run -v /mnt/db:/var/lib/mysql:z mariadb
+$ podman run -v /mnt/web:/var/www/html:Z httpd</pre>
+                </div>
+            </section>
+
+            <!-- Slayt 23: Rocky Linux 9 -->
+            <section>
+                <h2>🏔️ Rocky Linux 9 ve Podman</h2>
+                <div class="architecture-box">
+                    <h4>Rocky Linux Nedir?</h4>
+                    <p style="font-size: 0.85em;">CentOS'un yerine geçen, RHEL tabanlı, topluluk destekli enterprise Linux dağıtımı</p>
+                </div>
+                <ul style="margin-top: 20px; line-height: 1.8; font-size: 0.9em;">
+                    <li><span class="highlight">RHEL Uyumlu:</span> %100 RHEL binary compatible</li>
+                    <li><span class="highlight">Podman Entegrasyonu:</span> Varsayılan olarak kurulu</li>
+                    <li><span class="highlight">Güvenlik:</span> SELinux, firewalld aktif</li>
+                    <li><span class="highlight">LTS Desteği:</span> 10 yıl güncelleme garantisi</li>
+                </ul>
+            </section>
+
+            <!-- Slayt 24: Rocky Linux 9 Podman Sürümü -->
+            <section>
+                <h2>📦 Rocky Linux 9'da Podman</h2>
+                <div class="command-box">
+                    <p>Podman Kurulumu ve Sürüm Kontrolü:</p>
+                    <pre>$ sudo dnf install podman -y
+$ podman --version
+Podman version 4.6.1
+
+$ podman info
+host:
+  arch: x86_64
+  os: linux
+  kernel: 5.14.0-362.el9.x86_64</pre>
+                </div>
+                <p style="margin-top: 20px; font-size: 0.85em;">
+                    <span class="success">✓</span> Container-tools modülü ile birlikte gelir<br>
+                    <span class="success">✓</span> Buildah, Skopeo dahil
+                </p>
+            </section>
+
+            <!-- Slayt 25: Firewall Yapılandırması -->
+            <section>
+                <h2>🔥 Rocky Linux 9 Firewall</h2>
+                <div class="architecture-box">
+                    <p>Container portlarının dış dünyaya açılması için firewalld yapılandırması gereklidir</p>
+                </div>
+                <div class="command-box" style="margin-top: 20px;">
+                    <pre>$ sudo firewall-cmd --add-port=8080/tcp
+$ sudo firewall-cmd --permanent --add-port=3306/tcp
+$ sudo firewall-cmd --reload
+$ sudo firewall-cmd --list-ports
+
+# Port forwarding
+$ sudo firewall-cmd --permanent --add-rich-rule=\
+  'rule family="ipv4" forward-port port="80" \
+   protocol="tcp" to-port="8080"'</pre>
+                </div>
+            </section>
+
+            <!-- Slayt 26: Guestbook Lab - Giriş -->
+            <section class="center-content">
+                <h1>🧪 Guestbook Lab Uygulaması</h1>
+                <h3 style="margin-top: 40px;">Çok Katmanlı Web Uygulaması</h3>
+                <div class="architecture-box" style="margin-top: 40px;">
+                    <p><strong>Uygulama Mimarisi:</strong></p>
+                    <p style="font-size: 0.9em; margin-top: 15px;">
+                        PHP Frontend + Apache/PHP-FPM<br>
+                        ↕<br>
+                        MariaDB Veritabanı
+                    </p>
+                </div>
+            </section>
+
+            <!-- Slayt 27: Lab Mimarisi -->
+            <section>
+                <h2>🏗️ Lab Uygulaması Mimarisi</h2>
+                <div style="font-size: 0.75em; margin-top: 20px;">
+                    <div class="architecture-box" style="background: rgba(255,152,0,0.1); border-color: #ff9800;">
+                        <strong>İstemci (Web Browser)</strong><br>
+                        http://host:80 → http://host:8080
+                    </div>
+                    <div style="text-align: center; font-size: 2em; color: #42affa;">↓</div>
+                    <div class="architecture-box" style="background: rgba(66,175,250,0.1);">
+                        <strong>Apache/PHP-FPM Container</strong><br>
+                        app-net + db-net | Port: 8080 → 80<br>
+                        Volume: /mnt/web_app → /var/www/html
+                    </div>
+                    <div style="text-align: center; font-size: 2em; color: #42affa;">↓</div>
+                    <div class="architecture-box" style="background: rgba(76,175,80,0.1); border-color: #4CAF50;">
+                        <strong>MariaDB Container</strong><br>
+                        db-net | Port: 3306<br>
+                        Volume: /mnt/db → /var/lib/mysql
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slayt 28: Network Topolojisi -->
+            <section>
+                <h2>🌐 Network Topolojisi</h2>
+                <div style="font-size: 0.8em; margin-top: 20px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="architecture-box" style="background: rgba(66,175,250,0.1);">
+                            <h4>app-net (Frontend)</h4>
+                            <ul style="font-size: 0.9em;">
+                                <li>Apache container</li>
+                                <li>Dış dünyaya açık</li>
+                                <li>Port: 8080</li>
+                            </ul>
+                        </div>
+                        <div class="architecture-box" style="background: rgba(76,175,80,0.1); border-color: #4CAF50;">
+                            <h4>db-net (Backend)</h4>
+                            <ul style="font-size: 0.9em;">
+                                <li>MariaDB container</li>
+                                <li>Apache container</li>
+                                <li>İzole ağ</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="command-box" style="margin-top: 20px;">
+                    <pre>$ podman network create app-net
+$ podman network create db-net
+$ podman network connect db-net apache</pre>
+                </div>
+                <p style="margin-top: 15px; font-size: 0.8em;">
+                    <span class="highlight">Güvenlik:</span> Database sadece backend ağında erişilebilir
+                </p>
+            </section>
+
+            <!-- Slayt 29: Adım 1 - Dizin Hazırlığı -->
+            <section>
+                <h2>📁 Adım 1: Dizin Yapısını Oluşturma</h2>
+                <div class="command-box">
+                    <pre># Web uygulama dizini
+$ sudo mkdir -pv /mnt/web_app
+$ sudo chown $USER:$USER /mnt/web_app
+$ chmod 775 /mnt/web_app
+
+# Veritabanı dizini
+$ sudo mkdir -pv /mnt/db
+$ sudo chown $USER:$USER /mnt/db
+$ chmod 775 /mnt/db</pre>
+                </div>
+                <div style="margin-top: 20px; font-size: 0.85em;">
+                    <p><span class="highlight">Amaç:</span> Host sistemde persistent storage alanları oluşturmak</p>
+                    <p style="margin-top: 10px;"><span class="success">✓</span> /mnt/web_app: PHP dosyaları</p>
+                    <p><span class="success">✓</span> /mnt/db: MySQL veritabanı dosyaları</p>
+                </div>
+            </section>
+
+            <!-- Slayt 30: Adım 2 - Network Oluşturma -->
+            <section>
+                <h2>🌐 Adım 2: Podman Network Oluşturma</h2>
+                <div class="command-box">
+                    <pre>$ podman network create app-net
+$ podman network create db-net
+
+# Oluşturulan networkleri listele
+$ podman network ls
+NETWORK ID    NAME     DRIVER
+abc123def     app-net  bridge
+def456ghi     db-net   bridge</pre>
+                </div>
+                <div class="architecture-box" style="margin-top: 20px;">
+                    <p><strong>İki Ayrı Network Neden?</strong></p>
+                    <ul style="font-size: 0.85em; margin-top: 10px;">
+                        <li><strong>app-net:</strong> Frontend ağı (dış dünyaya açık)</li>
+                        <li><strong>db-net:</strong> Backend ağı (izole, sadece uygulama erişebilir)</li>
+                        <li><strong>Güvenlik:</strong> Veritabanına doğrudan erişim engellenir</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Slayt 31: Adım 3 - MariaDB Container -->
+            <section>
+                <h2>🗄️ Adım 3: MariaDB Container Başlatma</h2>
+                <div class="command-box small-text">
+                    <pre>$ podman pull registry.lab.akyuz.tech/db/mariadb:latest
+
+$ podman run -d \
+  --name mariadb \
+  --network db-net \
+  -p 3306:3306 \
+  -v /mnt/db:/var/lib/mysql:z \
+  -e MYSQL_ROOT_PASSWORD=TA3RDA \
+  registry.lab.akyuz.tech/db/mariadb:latest</pre>
+                </div>
+                <div style="margin-top: 20px; font-size: 0.75em;">
+                    <p><span class="highlight">-d:</span> Detached mode (arkaplanda çalış)</p>
+                    <p><span class="highlight">--network db-net:</span> Backend ağına bağla</p>
+                    <p><span class="highlight">-p 3306:3306:</span> Port eşlemesi</p>
+                    <p><span class="highlight">-v ... :z:</span> SELinux paylaşımlı etiket</p>
+                    <p><span class="highlight">-e:</span> Environment variable (root şifresi)</p>
+                </div>
+            </section>
+
+            <!-- Slayt 32: Adım 4 - Firewall Ayarları -->
+            <section>
+                <h2>🔥 Adım 4: Firewall Port Açma</h2>
+                <div class="command-box">
+                    <pre># MariaDB portu
+$ sudo firewall-cmd --add-port=3306/tcp
+success
+
+# Web portu (kalıcı kural)
+$ sudo firewall-cmd --permanent --add-rich-rule=\
+  'rule family="ipv4" forward-port port="80" \
+   protocol="tcp" to-port="8080"'
+
+$ sudo firewall-cmd --reload
+$ sudo firewall-cmd --list-all</pre>
+                </div>
+                <p style="margin-top: 20px; font-size: 0.85em;">
+                    <span class="warning">⚠️</span> Güvenlik: Sadece gerekli portları açın<br>
+                    <span class="highlight">Port 80 → 8080:</span> Dış istekleri container'a yönlendir
+                </p>
+            </section>
+
+            <!-- Slayt 33: Adım 5 - DB Schema Yükleme -->
+            <section>
+                <h2>📚 Adım 5: Veritabanı Şeması Yükleme</h2>
+                <div class="command-box small-text">
+                    <pre># MySQL client kurulumu
+$ sudo yum install mariadb -y
+
+# Guestbook dosyalarını indir
+$ wget http://repo.akyuz.tech/guestbook.tar.gz
+$ tar xzvf guestbook.tar.gz
+$ cd guestbook
+
+# Metod 1: Host üzerinden
+$ mysql -h 127.0.0.1 -uroot -pTA3RDA < db_init.sql
+
+# Metod 2: Container içinden
+$ podman exec -i mariadb \
+  mysql -uroot -pTA3RDA < db_init.sql</pre>
+                </div>
+                <p style="margin-top: 15px; font-size: 0.8em;">
+                    <span class="highlight">db_init.sql:</span> Tablo yapıları ve başlangıç verileri
+                </p>
+            </section>
+
+            <!-- Slayt 34: DB Schema İçeriği -->
+            <section>
+                <h2>📋 Veritabanı Şeması Örneği</h2>
+                <div class="command-box small-text">
+                    <pre>-- db_init.sql örnek içeriği
+CREATE DATABASE IF NOT EXISTS appdb;
+USE appdb;
+
+CREATE TABLE guestbook (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(100),
+  message TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO guestbook (name, email, message) VALUES
+('Ahmet Yılmaz', 'ahmet@example.com', 'Harika bir uygulama!'),
+('Ayşe Demir', 'ayse@example.com', 'Çok beğendim.');</pre>
+                </div>
+            </section>
+
+            <!-- Slayt 35: Adım 6 - Apache Container -->
+            <section>
+                <h2>🌐 Adım 6: Apache/PHP-FPM Container</h2>
+                <div class="command-box small-text">
+                    <pre>$ podman run -d \
+  --name apache \
+  --network app-net \
+  -p 8080:80 \
+  -v /mnt/web_app/:/var/www/html:Z \
+  -e DB_HOST=mariadb \
+  -e DB_USER=root \
+  -e DB_PASSWORD=TA3RDA \
+  -e DB_NAME=appdb \
+  registry.lab.akyuz.tech/webservers/php-fpm-httpd:rocky9</pre>
+                </div>
+                <div style="margin-top: 15px; font-size: 0.75em;">
+                    <p><span class="highlight">--network app-net:</span> Frontend ağı</p>
+                    <p><span class="highlight">-v ... :Z:</span> SELinux private etiket</p>
+                    <p><span class="highlight">DB_HOST=mariadb:</span> Container ismiyle bağlantı</p>
+                </div>
+            </section>
+
+            <!-- Slayt 36: Adım 7 - Network Bridge -->
+            <section>
+                <h2>🌉 Adım 7: Apache'yi DB Network'e Bağlama</h2>
+                <div class="command-box">
+                    <pre>$ podman network connect db-net apache
+
+# Container network bilgilerini kontrol et
+$ podman inspect apache | jq .[].NetworkSettings.Networks
+
+{
+  "app-net": {
+    "IPAddress": "10.89.0.2",
+    ...
+  },
+  "db-net": {
+    "IPAddress": "10.88.0.3",
+    ...
+  }
+}</pre>
+                </div>
+                <p style="margin-top: 20px; font-size: 0.85em;">
+                    <span class="success">✓</span> Apache artık hem <strong>app-net</strong> hem de <strong>db-net</strong> üzerinde<br>
+                    <span class="success">✓</span> MariaDB'ye <code>mariadb</code> hostname ile erişebilir
+                </p>
+            </section>
+
+            <!-- Slayt 37: Adım 8 - PHP Dosyası -->
+            <section>
+                <h2>📝 Adım 8: index.php Kopyalama</h2>
+                <div class="command-box">
+                    <pre># PHP dosyasını web dizinine kopyala
+$ cp -iv index.php /mnt/web_app/
+$ chmod 644 /mnt/web_app/index.php
+$ ls -la /mnt/web_app/
+
+-rw-r--r--. 1 user user 2048 Oct 21 10:30 index.php</pre>
+                </div>
+                <div class="command-box small-text" style="margin-top: 20px;">
+                    <p>index.php örnek kod:</p>
+                    <pre>&lt;?php
+$conn = new mysqli(
+  getenv('DB_HOST'),
+  getenv('DB_USER'),
+  getenv('DB_PASSWORD'),
+  getenv('DB_NAME')
+);
+$result = $conn->query("SELECT * FROM guestbook");
+?&gt;</pre>
+                </div>
+            </section>
+
+            <!-- Slayt 38: Test ve Doğrulama -->
+            <section>
+                <h2>✅ Adım 9: Test ve Doğrulama</h2>
+                <div class="command-box">
+                    <pre># Container durumlarını kontrol et
+$ podman ps
+CONTAINER ID  IMAGE           STATUS      PORTS
+abc123def     mariadb:latest  Up 5 min    0.0.0.0:3306->3306/tcp
+def456ghi     php-fpm:rocky9  Up 2 min    0.0.0.0:8080->80/tcp
+
+# Local test
+$ curl http://127.0.0.1:8080/
+
+# Log kontrolü
+$ podman logs apache
+$ podman logs mariadb</pre>
+                </div>
+                <p style="margin-top: 20px; font-size: 0.85em;">
+                    <span class="success">✓</span> Web: http://han.lab.akyuz.tech/<br>
+                    <span class="success">✓</span> Web: http://s01.lab.akyuz.tech/
+                </p>
+            </section>
+
+            <!-- Slayt 39: Systemd Entegrasyonu -->
+            <section>
+                <h2>⚙️ Adım 10: Systemd Servis Oluşturma</h2>
+                <div class="command-box small-text">
+                    <pre># 1. Systemd unit dosyalarını oluştur
+$ podman generate systemd --name apache --files --new
+$ podman generate systemd --name mariadb --files --new
+
+# 2. User systemd dizinine taşı
+$ mkdir -pv ~/.config/systemd/user/
+$ mv -iv container-apache.service \
+        container-mariadb.service \
+        ~/.config/systemd/user/
+
+# 3. Systemd'yi yeniden yükle
+$ systemctl --user daemon-reload
+$ systemctl --user enable container-mariadb.service
+$ systemctl --user enable container-apache.service</pre>
+                </div>
+            </section>
+
+            <!-- Slayt 40: Systemd Yönetimi -->
+            <section>
+                <h2>🔄 Systemd ile Servis Yönetimi</h2>
+                <div class="command-box">
+                    <pre># Servisleri başlat/durdur
+$ systemctl --user start container-apache.service
+$ systemctl --user stop container-mariadb.service
+$ systemctl --user status container-apache.service
+
+# Boot'ta otomatik başlatma
+$ loginctl enable-linger
+$ loginctl show-user $USER</pre>
+                </div>
+                <div style="margin-top: 20px; font-size: 0.85em;">
+                    <p><span class="highlight">enable-linger:</span> Kullanıcı logout olsa bile servisler çalışmaya devam eder</p>
+                    <p style="margin-top: 10px;"><span class="success">✓</span> Container'lar artık systemd servisi olarak yönetiliyor</p>
+                    <p><span class="success">✓</span> Sistem yeniden başladığında otomatik başlar</p>
+                </div>
+            </section>
+
+            <!-- Slayt 41: Troubleshooting -->
+            <section>
+                <h2>🔍 Troubleshooting - Sorun Giderme</h2>
+                <div class="command-box small-text">
+                    <pre># Container logları
+$ podman logs apache
+$ podman logs -f mariadb  # Real-time log
+
+# Systemd servis durumu
+$ systemctl --user status container-apache.service
+
+# Systemd journal logları
+$ journalctl -f -u container-apache.service
+
+# Network inceleme
+$ podman network inspect app-net
+$ podman network inspect db-net
+
+# Firewall kontrolü
+$ sudo firewall-cmd --list-ports
+$ sudo firewall-cmd --list-all</pre>
+                </div>
+            </section>
+
+            <!-- Slayt 42: Container İnceleme -->
+            <section>
+                <h2>🔬 Container Detaylı İnceleme</h2>
+                <div class="command-box small-text">
+                    <pre># Genel bilgi
+$ podman inspect apache
+
+# Network ayarları
+$ podman inspect --format=\
+  '{{.NetworkSettings.Networks}}' apache
+
+# Container durumu
+$ podman inspect --format='{{.State.Status}}' apache
+running
+
+# Container çalışıyor mu?
+$ podman inspect --format='{{.State.Running}}' apache
+true</pre>
+                </div>
+            </section>
+
+            <!-- Slayt 43: İleri Seviye Komutlar -->
+            <section>
+                <h2>🚀 İleri Seviye Podman Komutları</h2>
+                <div class="command-box small-text">
+                    <pre># Container içinde komut çalıştır
+$ podman exec -it apache bash
+$ podman exec mariadb mysql -uroot -pTA3RDA -e "SHOW DATABASES;"
+
+# Container kaynak kullanımı
+$ podman stats apache
+
+# Image history
+$ podman history registry.lab.akyuz.tech/db/mariadb:latest
+
+# Container dosya sistemi değişikliklerini gör
+$ podman diff apache</pre>
+                </div>
+            </section>
+
+            <!-- Slayt 44: Best Practices -->
+            <section>
+                <h2>✨ Best Practices - En İyi Uygulamalar</h2>
+                <ul style="font-size: 0.85em; line-height: 1.8;">
+                    <li><span class="highlight">Rootless:</span> Mümkün olduğunca rootless mode kullanın</li>
+                    <li><span class="highlight">Networks:</span> Frontend/Backend network ayrımı yapın</li>
+                    <li><span class="highlight">Volumes:</span> Named volume kullanın, bind mount minimize edin</li>
+                    <li><span class="highlight">SELinux:</span> :z veya :Z etiketlerini doğru kullanın</li>
+                    <li><span class="highlight">Secrets:</span> Şifreleri environment variable yerine secret olarak saklayın</li>
+                    <li><span class="highlight">Health Checks:</span> Container sağlık kontrolü ekleyin</li>
+                    <li><span class="highlight">Resource Limits:</span> CPU/Memory limitlerini belirleyin</li>
+                    <li><span class="highlight">Logging:</span> Merkezi log toplama sistemi kullanın</li>
+                </ul>
+            </section>
+
+            <!-- Slayt 45: Güvenlik Tavsiyeleri -->
+            <section>
+                <h2>🔐 Güvenlik Tavsiyeleri</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 0.8em;">
+                    <div class="architecture-box">
+                        <h4>✅ Yapılması Gerekenler</h4>
+                        <ul>
+                            <li>Rootless mode kullan</li>
+                            <li>SELinux aktif tut</li>
+                            <li>En az yetki prensibi</li>
+                            <li>Image'ları tara</li>
+                            <li>Güvenilir registry kullan</li>
+                            <li>Network segmentasyonu</li>
+                        </ul>
+                    </div>
+                    <div class="architecture-box">
+                        <h4>❌ Yapılmaması Gerekenler</h4>
+                        <ul>
+                            <li>--privileged flag kullanma</li>
+                            <li>Root şifrelerini açıkta bırakma</li>
+                            <li>Tüm portları açma</li>
+                            <li>SELinux disable etme</li>
+                            <li>latest tag kullanma</li>
+                            <li>Unknown source image</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slayt 46: Performans Optimizasyonu -->
+            <section>
+                <h2>⚡ Performans Optimizasyonu</h2>
+                <div class="command-box small-text">
+                    <pre># CPU limiti
+$ podman run --cpus=2 nginx
+
+# Memory limiti
+$ podman run --memory=512m nginx
+
+# Storage driver (overlay2 en hızlı)
+$ podman info | grep graphDriverName
+graphDriverName: overlay
+
+# Image cache kullanımı
+$ podman build --cache-from=registry.io/app:latest
+
+# Network performansı için host mode
+$ podman run --network=host nginx  # Dikkatli kullan!</pre>
+                </div>
+            </section>
+
+            <!-- Slayt 47: Monitoring ve Logging -->
+            <section>
+                <h2>📊 Monitoring ve Logging</h2>
+                <div class="command-box small-text">
+                    <pre># Container metrikleri
+$ podman stats --no-stream
+CONTAINER   CPU %   MEM USAGE / LIMIT   MEM %
+apache      0.5%    45MB / 2GB          2.25%
+mariadb     1.2%    256MB / 2GB         12.8%
+
+# Log yönetimi
+$ podman logs --since 1h apache
+$ podman logs --tail 100 mariadb
+$ podman logs --timestamps apache
+
+# Events izleme
+$ podman events --filter container=apache</pre>
+                </div>
+            </section>
+
+            <!-- Slayt 48: Yedekleme ve Restore -->
+            <section>
+                <h2>💾 Yedekleme ve Restore</h2>
+                <div class="command-box small-text">
+                    <pre># Container'ı image olarak kaydet
+$ podman commit apache apache-backup:v1
+
+# Image'ı dosyaya aktar
+$ podman save -o apache-backup.tar apache-backup:v1
+
+# Image'ı geri yükle
+$ podman load -i apache-backup.tar
+
+# Volume yedekleme
+$ podman run --rm -v /mnt/db:/source \
+  -v /backup:/dest alpine \
+  tar czf /dest/db-backup.tar.gz /source
+
+# Container export
+$ podman export apache > apache.tar</pre>
+                </div>
+            </section>
+
+            <!-- Slayt 49: Özet ve Sonuç -->
+            <section>
+                <h2>📌 Özet - Öğrendiklerimiz</h2>
+                <div style="font-size: 0.85em;">
+                    <div class="architecture-box" style="background: rgba(66,175,250,0.1);">
+                        <h4>🐳 Podman Temel Özellikleri</h4>
+                        <p>Daemonless, rootless, güvenli container yönetimi</p>
+                    </div>
+                    <div class="architecture-box" style="background: rgba(76,175,80,0.1); border-color: #4CAF50;">
+                        <h4>🏗️ Mimari Yapı</h4>
+                        <p>4 katmanlı mimari: CLI → Libpod → Runtime → Kernel</p>
+                    </div>
+                    <div class="architecture-box" style="background: rgba(255,152,0,0.1); border-color: #ff9800;">
+                        <h4>🧪 Lab Uygulaması</h4>
+                        <p>MariaDB + Apache/PHP multi-container uygulaması</p>
+                    </div>
+                    <div class="architecture-box" style="background: rgba(156,39,176,0.1); border-color: #9c27b0;">
+                        <h4>⚙️ Systemd Entegrasyonu</h4>
+                        <p>Container'ları native Linux servisi olarak yönetme</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slayt 50: Kaynaklar ve İletişim -->
+            <section class="center-content">
+                <h2>📚 Kaynaklar</h2>
+                <div style="text-align: left; display: inline-block; margin-top: 30px; font-size: 0.85em;">
+                    <p><span class="highlight">Resmi Dokümantasyon:</span></p>
+                    <ul>
+                        <li>podman.io/docs</li>
+                        <li>docs.rockylinux.org</li>
+                        <li>github.com/containers/podman</li>
+                    </ul>
+                    <p style="margin-top: 20px;"><span class="highlight">OCI Spesifikasyonları:</span></p>
+                    <ul>
+                        <li>opencontainers.org</li>
+                    </ul>
+                    <p style="margin-top: 20px;"><span class="highlight">Topluluk:</span></p>
+                    <ul>
+                        <li>reddit.com/r/podman</li>
+                        <li>Red Hat Container Community</li>
+                    </ul>
+                </div>
+                <h3 style="margin-top: 60px; color: #42affa;">Teşekkürler! 🎉</h3>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: true,
+            transition: 'slide',
+            backgroundTransition: 'fade',
+            center: false,
+            width: 1280,
+            height: 720,
+            margin: 0.04
+        });
+    </script>
+</body>
+</html>

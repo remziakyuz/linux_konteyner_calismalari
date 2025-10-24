@@ -1,0 +1,44 @@
+---
+- name: Kullanıcılara bilgilendirme e-postası gönder
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    csv_path: vm_users_info.csv
+    mail_from: "remzi@akyuz.tech"
+    smtp_user: "remzi@akyuz.tech"
+    smtp_pass: "mypass"
+    smtp_host: "mx01.akyuz.tech"
+    smtp_port: 587
+    proxmox_sunucu: "https://lab.akyuz.tech:8006"
+
+
+
+
+  tasks:
+    - name: CSV dosyasını oku
+      ansible.builtin.read_csv:
+        path: "{{ csv_path }}"
+      register: csv_data
+
+    - name: Mail body’lerini template’den oluştur
+      ansible.builtin.template:
+        src: templates/mail_body.j2
+        dest: "/tmp/mail_{{ item['proxmox user'] }}.txt"
+      loop: "{{ csv_data.list }}"
+      vars:
+        isim_soyisim: "{{ item['Kullanıcı İsim Soyisim'] }}"
+        proxmox_kullanici: "{{ item['proxmox user'] }}"
+        proxmox_parola: "{{ item['proxmox password'] }}"
+
+    - name: E-postaları gönder
+      ansible.builtin.mail:
+        host: "{{ smtp_host }}"
+        port: "{{ smtp_port }}"
+        username: "{{ smtp_user }}"
+        password: "{{ smtp_pass }}"
+        from: "{{ mail_from }}"
+        to: "{{ item['eposta adresi'] }}"
+        subject: "Linux Lab Bilgilendirme"
+        body: "{{ lookup('file', '/tmp/mail_' + item['proxmox user'] + '.txt') }}"
+      loop: "{{ csv_data.list }}"    

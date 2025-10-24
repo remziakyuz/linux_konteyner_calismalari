@@ -1,0 +1,1 @@
+Bu playbook vm_users_info.csv dosyasindaki bilgilerden eposta oluşturarak, kullanıcıların epostalarına gönderir.

@@ -1,0 +1,116 @@
+---
+- name: Proxmox kullanıcı ve ACL yönetimi (nihai sürüm)
+  hosts: localhost
+  connection: local
+  become: true
+  gather_facts: false
+
+  vars:
+    proxmox_role: "VMOwner"
+    proxmox_privs_base:
+      - "VM.Console"
+      - "VM.PowerMgmt"
+      - "VM.Audit"
+      - "VM.Config.CDROM"
+      - "VM.Backup"
+    proxmox_privs_storage:
+      - "Datastore.Audit"
+      - "Datastore.AllocateSpace"
+    proxmox_realm: "pve"
+    csv_file: "files/vm-users.csv"
+    iso_storage: "iso_images"
+
+  tasks:
+
+    - name: CSV'den kullanıcı bilgilerini oku
+      ansible.builtin.read_csv:
+        path: "{{ csv_file }}"
+      register: users
+
+    - name: VMOwner rolünü kontrol et veya oluştur
+      ansible.builtin.shell: |
+        if pveum role list | awk '{print $1}' | grep -qx "{{ proxmox_role }}"; then
+          echo "[=] Rol zaten mevcut: {{ proxmox_role }}"
+          exit 0
+        else
+          echo "[+] Rol oluşturuluyor: {{ proxmox_role }}"
+          pveum role add "{{ proxmox_role }}" --privs "{{ (proxmox_privs_base + proxmox_privs_storage) | join(' ') }}" || true
+        fi
+      args:
+        executable: /bin/bash
+      changed_when: false
+      failed_when: false
+
+    - name: VMOwner rolünün izinlerini güncelle (ISO erişimi dahil)
+      ansible.builtin.shell: |
+        echo "[~] Rol izinleri güncelleniyor: {{ proxmox_role }}"
+        pveum role modify "{{ proxmox_role }}" --privs "{{ (proxmox_privs_base + proxmox_privs_storage) | join(' ') }}" || true
+      args:
+        executable: /bin/bash
+      changed_when: false
+      failed_when: false
+
+    - name: Kullanıcıları oluştur veya şifreleri güncelle
+      no_log: true
+      ansible.builtin.shell: |
+        userid="{{ item.user }}@{{ proxmox_realm }}"
+        if pveum user list | awk '{print $1}' | grep -qx "$userid"; then
+          echo "[=] Kullanıcı mevcut: $userid, parola güncelleniyor"
+          pvesh set /access/password --userid "$userid" --password "{{ item.password }}" >/dev/null 2>&1 || true
+        else
+          echo "[+] Yeni kullanıcı oluşturuluyor: $userid"
+          pveum user add "$userid" -comment "Owner for VM {{ item.vmid }}" --password "{{ item.password }}" >/dev/null 2>&1 || true
+        fi
+      args:
+        executable: /bin/bash
+      loop: "{{ users.list }}"
+      loop_control:
+        label: "{{ item.user }}"
+      changed_when: false
+      failed_when: false
+
+    - name: Kullanıcı ACL'lerini kontrol et ve VM bazında ekle
+      ansible.builtin.shell: |
+        userid="{{ item.user }}@{{ proxmox_realm }}"
+        path="/vms/{{ item.vmid }}"
+        if pveum acl list | grep -qE "^$path\s+.*$userid"; then
+          echo "[=] ACL zaten mevcut: $userid -> $path"
+        else
+          echo "[+] ACL eklendi: $userid -> $path"
+          pveum aclmod "$path" --roles "{{ proxmox_role }}" --users "$userid" >/dev/null 2>&1 || true
+        fi
+      args:
+        executable: /bin/bash
+      loop: "{{ users.list }}"
+      loop_control:
+        label: "{{ item.user }}"
+      changed_when: false
+      failed_when: false
+
+    - name: ISO storage erişimi için ACL ekle
+      ansible.builtin.shell: |
+        userid="{{ item.user }}@{{ proxmox_realm }}"
+        path="/storage/{{ iso_storage }}"
+        if pveum acl list | grep -qE "^$path\s+.*$userid"; then
+          echo "[=] ISO ACL zaten mevcut: $userid -> $path"
+        else
+          echo "[+] ISO ACL eklendi: $userid -> $path"
+          pveum aclmod "$path" --roles "{{ proxmox_role }}" --users "$userid" >/dev/null 2>&1 || true
+        fi
+      args:
+        executable: /bin/bash
+      loop: "{{ users.list }}"
+      loop_control:
+        label: "{{ item.user }}"
+      changed_when: false
+      failed_when: false
+
+    - name: Özet rapor
+      ansible.builtin.debug:
+        msg: |
+          ✅ {{ users.list | length }} kullanıcı işlendi.
+          Rol: {{ proxmox_role }}
+          Realm: {{ proxmox_realm }}
+          ISO Storage: {{ iso_storage }}
+          CSV dosyası: {{ csv_file }}
+
