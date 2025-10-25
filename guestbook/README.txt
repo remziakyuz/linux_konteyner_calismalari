@@ -16,7 +16,7 @@ $ sudo ./add-lab-ca.sh lab-ca.crt
 
   $ podman pull registry.lab.akyuz.tech/db/mariadb:latest 
   $ podman run -d --name mariadb  --network db-net \
-             -p 3306:3306 -v /mnt/db:/var/lib/mysql:z  \
+             -p 3306:3306 -v /mnt/db:/var/lib/mysql:Z  \
 			 -e MYSQL_ROOT_PASSWORD=TA3RDA   registry.lab.akyuz.tech/db/mariadb:latest 
 
 
