@@ -1,0 +1,295 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900">
+  <defs>
+    <marker id="arrowblue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#2563eb" />
+    </marker>
+    <marker id="arrowgreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#16a34a" />
+    </marker>
+    <marker id="arroworange" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#ea580c" />
+    </marker>
+    <filter id="shadow">
+      <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Başlık -->
+  <text x="600" y="35" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="#1e293b">
+    Podman Web Uygulaması Mimarisi
+  </text>
+  <text x="600" y="60" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#64748b">
+    Rocky Linux 9 - Guestbook Application Architecture
+  </text>
+  
+  <!-- Arka plan bölgeleri -->
+  <!-- Internet Zone -->
+  <rect x="50" y="90" width="300" height="180" fill="#eff6ff" stroke="#3b82f6" stroke-width="2" stroke-dasharray="5,5" rx="10"/>
+  <text x="200" y="115" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#1e40af">
+    İnternet / Dış Erişim
+  </text>
+  
+  <!-- Host System -->
+  <rect x="50" y="290" width="1100" height="560" fill="#f0fdf4" stroke="#16a34a" stroke-width="3" rx="10" filter="url(#shadow)"/>
+  <text x="90" y="320" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#166534">
+    Host System (Rocky Linux 9)
+  </text>
+  
+  <!-- app-net network -->
+  <rect x="380" y="350" width="380" height="220" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="8"/>
+  <text x="570" y="375" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#1e40af">
+    app-net (Podman Network)
+  </text>
+  
+  <!-- db-net network -->
+  <rect x="380" y="600" width="760" height="220" fill="#fef3c7" stroke="#f59e0b" stroke-width="2" rx="8"/>
+  <text x="760" y="625" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#92400e">
+    db-net (Podman Network)
+  </text>
+  
+  <!-- Kullanıcı -->
+  <g id="user">
+    <circle cx="200" cy="180" r="35" fill="#3b82f6" filter="url(#shadow)"/>
+    <circle cx="200" cy="165" r="12" fill="white"/>
+    <path d="M 200 177 Q 185 190, 185 205 L 215 205 Q 215 190, 200 177" fill="white"/>
+    <text x="200" y="245" font-family="Arial, sans-serif" font-size="13" font-weight="bold" text-anchor="middle" fill="#1e40af">
+      Kullanıcı
+    </text>
+    <text x="200" y="260" font-family="Arial, sans-serif" font-size="11" text-anchor="middle" fill="#64748b">
+      (Web Browser)
+    </text>
+  </g>
+  
+  <!-- Firewall -->
+  <g id="firewall">
+    <rect x="140" y="340" width="120" height="100" fill="#dc2626" rx="8" filter="url(#shadow)"/>
+    <path d="M 160 370 L 180 370 L 170 350 Z M 190 370 L 210 370 L 200 350 Z M 220 370 L 240 370 L 230 350 Z" fill="#fca5a5"/>
+    <rect x="160" y="380" width="80" height="8" fill="#fca5a5" rx="2"/>
+    <rect x="160" y="395" width="80" height="8" fill="#fca5a5" rx="2"/>
+    <rect x="160" y="410" width="80" height="8" fill="#fca5a5" rx="2"/>
+    <text x="200" y="465" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#991b1b">
+      Firewall
+    </text>
+    <text x="200" y="480" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#991b1b">
+      Port 80 → 8080
+    </text>
+  </g>
+  
+  <!-- Apache/PHP Container -->
+  <g id="apache">
+    <rect x="420" y="410" width="300" height="140" fill="white" stroke="#2563eb" stroke-width="3" rx="10" filter="url(#shadow)"/>
+    <rect x="420" y="410" width="300" height="35" fill="#2563eb" rx="10"/>
+    <text x="570" y="433" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="white">
+      Apache/PHP Container
+    </text>
+    
+    <!-- Apache logo simulation -->
+    <circle cx="460" cy="470" r="20" fill="#d61f26"/>
+    <path d="M 445 470 L 460 455 L 475 470 L 460 485 Z" fill="white"/>
+    
+    <text x="495" y="470" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1e293b">
+      Apache HTTP Server
+    </text>
+    <text x="495" y="487" font-family="Arial, sans-serif" font-size="11" fill="#64748b">
+      PHP-FPM Runtime
+    </text>
+    <text x="495" y="504" font-family="Arial, sans-serif" font-size="11" fill="#64748b">
+      Port: 8080 → 80
+    </text>
+    
+    <!-- Environment variables -->
+    <rect x="430" y="515" width="280" height="25" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1" rx="4"/>
+    <text x="440" y="531" font-family="Courier New, monospace" font-size="9" fill="#1e40af">
+      ENV: DB_HOST=mariadb DB_USER=root
+    </text>
+  </g>
+  
+  <!-- MariaDB Container -->
+  <g id="mariadb">
+    <rect x="800" y="660" width="300" height="140" fill="white" stroke="#f59e0b" stroke-width="3" rx="10" filter="url(#shadow)"/>
+    <rect x="800" y="660" width="300" height="35" fill="#f59e0b" rx="10"/>
+    <text x="950" y="683" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="white">
+      MariaDB Container
+    </text>
+    
+    <!-- Database icon -->
+    <ellipse cx="845" cy="720" rx="25" ry="10" fill="#003545" stroke="#00546b" stroke-width="2"/>
+    <rect x="820" y="720" width="50" height="30" fill="#003545"/>
+    <ellipse cx="845" cy="750" rx="25" ry="10" fill="#003545" stroke="#00546b" stroke-width="2"/>
+    <ellipse cx="845" cy="730" rx="25" ry="10" fill="none" stroke="#00546b" stroke-width="1"/>
+    <ellipse cx="845" cy="740" rx="25" ry="10" fill="none" stroke="#00546b" stroke-width="1"/>
+    
+    <text x="885" y="720" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1e293b">
+      MariaDB 10.x
+    </text>
+    <text x="885" y="737" font-family="Arial, sans-serif" font-size="11" fill="#64748b">
+      Database: appdb
+    </text>
+    <text x="885" y="754" font-family="Arial, sans-serif" font-size="11" fill="#64748b">
+      Port: 3306
+    </text>
+    
+    <!-- Root password -->
+    <rect x="810" y="765" width="280" height="25" fill="#fef3c7" stroke="#fde047" stroke-width="1" rx="4"/>
+    <text x="820" y="781" font-family="Courier New, monospace" font-size="9" fill="#92400e">
+      ENV: MYSQL_ROOT_PASSWORD=TA3RDA
+    </text>
+  </g>
+  
+  <!-- Volumes -->
+  <g id="volumes">
+    <!-- Web volume -->
+    <rect x="100" y="580" width="180" height="80" fill="white" stroke="#8b5cf6" stroke-width="2" rx="8" filter="url(#shadow)"/>
+    <rect x="115" y="595" width="40" height="50" fill="#c4b5fd" rx="3"/>
+    <rect x="125" y="590" width="20" height="8" fill="#8b5cf6" rx="2"/>
+    <text x="170" y="620" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#5b21b6">
+      Volume: Web App
+    </text>
+    <text x="170" y="638" font-family="Courier New, monospace" font-size="9" fill="#64748b">
+      /mnt/web_app
+    </text>
+    <text x="170" y="652" font-family="Arial, sans-serif" font-size="9" fill="#64748b">
+      → index.php
+    </text>
+  </g>
+  
+  <!-- DB Volume -->
+  <g id="db-volume">
+    <rect x="100" y="720" width="180" height="80" fill="white" stroke="#8b5cf6" stroke-width="2" rx="8" filter="url(#shadow)"/>
+    <rect x="115" y="735" width="40" height="50" fill="#c4b5fd" rx="3"/>
+    <rect x="125" y="730" width="20" height="8" fill="#8b5cf6" rx="2"/>
+    <text x="170" y="760" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#5b21b6">
+      Volume: Database
+    </text>
+    <text x="170" y="778" font-family="Courier New, monospace" font-size="9" fill="#64748b">
+      /mnt/db
+    </text>
+    <text x="170" y="792" font-family="Arial, sans-serif" font-size="9" fill="#64748b">
+      → MySQL data
+    </text>
+  </g>
+  
+  <!-- Akış okları ve numaraları -->
+  
+  <!-- 1. Kullanıcıdan Firewall'a -->
+  <path d="M 200 270 L 200 340" stroke="#2563eb" stroke-width="3" fill="none" marker-end="url(#arrowblue)"/>
+  <circle cx="185" cy="305" r="15" fill="#2563eb"/>
+  <text x="185" y="312" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="white">1</text>
+  <text x="230" y="310" font-family="Arial, sans-serif" font-size="11" fill="#1e40af">HTTP Request</text>
+  <text x="230" y="324" font-family="Arial, sans-serif" font-size="10" fill="#64748b">GET /index.php</text>
+  
+  <!-- 2. Firewall'dan Apache'ye -->
+  <path d="M 260 390 L 420 450" stroke="#2563eb" stroke-width="3" fill="none" marker-end="url(#arrowblue)"/>
+  <circle cx="340" cy="420" r="15" fill="#2563eb"/>
+  <text x="340" y="427" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="white">2</text>
+  <text x="310" y="405" font-family="Arial, sans-serif" font-size="11" fill="#1e40af">Port Redirect</text>
+  <text x="310" y="418" font-family="Arial, sans-serif" font-size="10" fill="#64748b">:80 → :8080</text>
+  
+  <!-- 3. Apache'den MariaDB'ye (SQL Query) -->
+  <path d="M 650 550 L 870 660" stroke="#16a34a" stroke-width="3" fill="none" marker-end="url(#arrowgreen)"/>
+  <circle cx="760" cy="605" r="15" fill="#16a34a"/>
+  <text x="760" y="612" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="white">3</text>
+  <text x="710" y="590" font-family="Arial, sans-serif" font-size="11" fill="#166534">SQL Query</text>
+  <text x="680" y="604" font-family="Courier New, monospace" font-size="9" fill="#64748b">SELECT * FROM</text>
+  <text x="680" y="616" font-family="Courier New, monospace" font-size="9" fill="#64748b">guestbook</text>
+  
+  <!-- 4. MariaDB'den Apache'ye (Result) -->
+  <path d="M 870 720 L 720 550" stroke="#ea580c" stroke-width="3" fill="none" marker-end="url(#arroworange)" stroke-dasharray="5,5"/>
+  <circle cx="795" cy="635" r="15" fill="#ea580c"/>
+  <text x="795" y="642" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="white">4</text>
+  <text x="820" y="625" font-family="Arial, sans-serif" font-size="11" fill="#c2410c">Result Set</text>
+  <text x="820" y="639" font-family="Arial, sans-serif" font-size="10" fill="#64748b">Database rows</text>
+  
+  <!-- 5. Apache'den Firewall'a (Response) -->
+  <path d="M 420 470 L 260 410" stroke="#ea580c" stroke-width="3" fill="none" marker-end="url(#arroworange)" stroke-dasharray="5,5"/>
+  <circle cx="340" cy="440" r="15" fill="#ea580c"/>
+  <text x="340" y="447" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="white">5</text>
+  <text x="305" y="460" font-family="Arial, sans-serif" font-size="11" fill="#c2410c">HTTP Response</text>
+  <text x="305" y="473" font-family="Arial, sans-serif" font-size="10" fill="#64748b">HTML Content</text>
+  
+  <!-- 6. Firewall'dan Kullanıcıya -->
+  <path d="M 200 340 L 200 270" stroke="#ea580c" stroke-width="3" fill="none" marker-end="url(#arroworange)" stroke-dasharray="5,5"/>
+  <circle cx="215" cy="305" r="15" fill="#ea580c"/>
+  <text x="215" y="312" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="white">6</text>
+  <text x="245" y="305" font-family="Arial, sans-serif" font-size="11" fill="#c2410c">Web Page</text>
+  <text x="245" y="319" font-family="Arial, sans-serif" font-size="10" fill="#64748b">Rendered HTML</text>
+  
+  <!-- Volume bağlantıları -->
+  <path d="M 280 620 L 420 480" stroke="#8b5cf6" stroke-width="2" fill="none" stroke-dasharray="3,3"/>
+  <text x="310" y="545" font-family="Arial, sans-serif" font-size="9" fill="#7c3aed">:Z mount</text>
+  
+  <path d="M 280 760 L 800 730" stroke="#8b5cf6" stroke-width="2" fill="none" stroke-dasharray="3,3"/>
+  <text x="480" y="745" font-family="Arial, sans-serif" font-size="9" fill="#7c3aed">:Z mount</text>
+  
+  <!-- Legend (Açıklama) -->
+  <g id="legend">
+    <rect x="870" y="100" width="280" height="160" fill="white" stroke="#cbd5e1" stroke-width="2" rx="8" filter="url(#shadow)"/>
+    <text x="1010" y="125" font-family="Arial, sans-serif" font-size="13" font-weight="bold" text-anchor="middle" fill="#1e293b">
+      Veri Akış Açıklaması
+    </text>
+    
+    <!-- İstek -->
+    <line x1="890" y1="145" x2="930" y2="145" stroke="#2563eb" stroke-width="3" marker-end="url(#arrowblue)"/>
+    <text x="940" y="150" font-family="Arial, sans-serif" font-size="11" fill="#1e293b">HTTP İstek Akışı</text>
+    
+    <!-- Cevap -->
+    <line x1="890" y1="170" x2="930" y2="170" stroke="#ea580c" stroke-width="3" stroke-dasharray="5,5" marker-end="url(#arroworange)"/>
+    <text x="940" y="175" font-family="Arial, sans-serif" font-size="11" fill="#1e293b">HTTP Cevap Akışı</text>
+    
+    <!-- DB Query -->
+    <line x1="890" y1="195" x2="930" y2="195" stroke="#16a34a" stroke-width="3" marker-end="url(#arrowgreen)"/>
+    <text x="940" y="200" font-family="Arial, sans-serif" font-size="11" fill="#1e293b">Veritabanı Sorgusu</text>
+    
+    <!-- Volume -->
+    <line x1="890" y1="220" x2="930" y2="220" stroke="#8b5cf6" stroke-width="2" stroke-dasharray="3,3"/>
+    <text x="940" y="225" font-family="Arial, sans-serif" font-size="11" fill="#1e293b">Volume Bağlantısı</text>
+    
+    <!-- Network -->
+    <rect x="890" y="235" width="40" height="15" fill="#dbeafe" stroke="#2563eb" stroke-width="1" rx="2"/>
+    <text x="940" y="247" font-family="Arial, sans-serif" font-size="11" fill="#1e293b">Podman Network</text>
+  </g>
+  
+  <!-- Network labels -->
+  <text x="400" y="395" font-family="Arial, sans-serif" font-size="10" fill="#1e40af">
+    🌐 Internet-facing network
+  </text>
+  <text x="400" y="645" font-family="Arial, sans-serif" font-size="10" fill="#92400e">
+    🔒 Internal database network
+  </text>
+  
+  <!-- İşlem adımları özeti -->
+  <g id="process-summary">
+    <rect x="400" y="100" width="440" height="200" fill="white" stroke="#64748b" stroke-width="2" rx="8" filter="url(#shadow)"/>
+    <rect x="400" y="100" width="440" height="30" fill="#475569" rx="8"/>
+    <text x="620" y="121" font-family="Arial, sans-serif" font-size="13" font-weight="bold" text-anchor="middle" fill="white">
+      İşlem Akışı (Request → Response)
+    </text>
+    
+    <text x="415" y="155" font-family="Arial, sans-serif" font-size="11" fill="#1e293b">
+      <tspan font-weight="bold">1.</tspan> Kullanıcı tarayıcıdan HTTP isteği gönderir (Port 80)
+    </text>
+    <text x="415" y="175" font-family="Arial, sans-serif" font-size="11" fill="#1e293b">
+      <tspan font-weight="bold">2.</tspan> Firewall isteği Port 8080'e yönlendirir
+    </text>
+    <text x="415" y="195" font-family="Arial, sans-serif" font-size="11" fill="#1e293b">
+      <tspan font-weight="bold">3.</tspan> Apache konteyneri isteği alır ve PHP'yi çalıştırır
+    </text>
+    <text x="415" y="215" font-family="Arial, sans-serif" font-size="11" fill="#1e293b">
+      <tspan font-weight="bold">4.</tspan> PHP, MariaDB'ye SQL sorgusu gönderir (db-net üzerinden)
+    </text>
+    <text x="415" y="235" font-family="Arial, sans-serif" font-size="11" fill="#1e293b">
+      <tspan font-weight="bold">5.</tspan> MariaDB veriyi döndürür, PHP HTML oluşturur
+    </text>
+    <text x="415" y="255" font-family="Arial, sans-serif" font-size="11" fill="#1e293b">
+      <tspan font-weight="bold">6.</tspan> Apache HTTP cevabı kullanıcıya gönderir
+    </text>
+    <text x="415" y="280" font-family="Arial, sans-serif" font-size="10" font-style="italic" fill="#64748b">
+      ⚡ Tüm işlem milisaniyeler içinde tamamlanır
+    </text>
+  </g>
+  
+  <!-- Footer bilgi -->
+  <text x="600" y="880" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#64748b">
+    Rocky Linux 9 | Podman Rootless Containers | SELinux Enabled | Production Ready Architecture
+  </text>
+</svg>
